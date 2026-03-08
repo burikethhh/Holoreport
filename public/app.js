@@ -1,6 +1,18 @@
 (function () {
   'use strict';
 
+  // ===== SVG ICONS =====
+  const SVG_ICONS = {
+    gesture: '<svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v6M14 10V4a2 2 0 0 0-4 0v7M10 10.5V7a2 2 0 0 0-4 0v9M22 14c0 5-4 8-9 8H9a8 8 0 0 1-6-3"/><path d="M18 11a2 2 0 0 1 4 0v3"/></svg>',
+    laser: '<svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>',
+    prev: '<svg class="toast-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>',
+    next: '<svg class="toast-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>'
+  };
+
+  function setBtnText(btn, iconKey, label) {
+    btn.innerHTML = SVG_ICONS[iconKey] + ' ' + label;
+  }
+
   // ===== STATE =====
   let slides = [];
   let currentIndex = 0;
@@ -126,7 +138,7 @@
   function enterApp(name) {
     userName = name.trim();
     localStorage.setItem('holoreport_user', userName);
-    userBadge.textContent = '👤 ' + userName;
+    userBadge.innerHTML = '<svg class="inline-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ' + userName;
     welcomeScreen.classList.add('hidden');
     uploadScreen.classList.remove('hidden');
 
@@ -521,7 +533,7 @@
       gestureActive = true;
       cameraBox.classList.remove('hidden');
       btnGesture.classList.add('active');
-      btnGesture.textContent = '🖐 Gesture: ON';
+      setBtnText(btnGesture, 'gesture', 'Gesture: ON');
     } catch (err) {
       console.error('Camera error:', err);
       alert('Could not access camera. Make sure you allow camera permission.');
@@ -540,9 +552,9 @@
     positionHistory = [];
     cameraBox.classList.add('hidden');
     btnGesture.classList.remove('active');
-    btnGesture.textContent = '🖐 Gesture: OFF';
+    setBtnText(btnGesture, 'gesture', 'Gesture: OFF');
     btnLaser.classList.remove('active');
-    btnLaser.textContent = '🔴 Laser: OFF';
+    setBtnText(btnLaser, 'laser', 'Laser: OFF');
     laserDot.classList.add('hidden');
   }
 
@@ -553,15 +565,15 @@
       startGesture().then(() => {
         laserActive = true;
         btnLaser.classList.add('active');
-        btnLaser.textContent = '🔴 Laser: ON';
-        showToast('🔴', 'Laser Pointer ON');
+        setBtnText(btnLaser, 'laser', 'Laser: ON');
+        showToast(SVG_ICONS.laser, 'Laser Pointer ON');
       });
     } else {
       laserActive = !laserActive;
       btnLaser.classList.toggle('active', laserActive);
-      btnLaser.textContent = laserActive ? '🔴 Laser: ON' : '🔴 Laser: OFF';
+      setBtnText(btnLaser, 'laser', laserActive ? 'Laser: ON' : 'Laser: OFF');
       if (!laserActive) laserDot.classList.add('hidden');
-      showToast('🔴', laserActive ? 'Laser Pointer ON' : 'Laser Pointer OFF');
+      showToast(SVG_ICONS.laser, laserActive ? 'Laser Pointer ON' : 'Laser Pointer OFF');
     }
   });
 
@@ -669,16 +681,16 @@
       // Camera is mirrored: positive dx in camera = left in real life = move to previous
       if (dx > 0) {
         goPrev();
-        showToast('👈', 'Previous');
+        showToast(SVG_ICONS.prev, 'Previous');
       } else {
         goNext();
-        showToast('👉', 'Next');
+        showToast(SVG_ICONS.next, 'Next');
       }
     }
   }
 
-  function showToast(icon, text) {
-    toastIcon.textContent = icon;
+  function showToast(iconHtml, text) {
+    toastIcon.innerHTML = iconHtml;
     toastText.textContent = text;
     gestureToast.classList.remove('hidden');
     // Reset animation

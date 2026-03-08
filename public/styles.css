@@ -33,6 +33,11 @@
 html, body { height: 100%; font-family: 'Inter', sans-serif; background: #0f0f0f; color: #e0e0e0; overflow: hidden; }
 .hidden { display: none !important; }
 
+/* SVG inline icons */
+.inline-icon { vertical-align: -2px; }
+.btn-icon { vertical-align: -3px; }
+.toast-svg { vertical-align: -4px; }
+
 /* ===== WELCOME SCREEN ===== */
 #welcome-screen {
   height: 100vh;
@@ -48,7 +53,7 @@ html, body { height: 100%; font-family: 'Inter', sans-serif; background: #0f0f0f
   width: 90%;
 }
 
-.welcome-icon { font-size: 48px; margin-bottom: 12px; }
+.welcome-icon { margin-bottom: 12px; line-height: 1; }
 
 .welcome-container h1 {
   font-size: 32px;
@@ -179,7 +184,7 @@ html, body { height: 100%; font-family: 'Inter', sans-serif; background: #0f0f0f
   width: 90%;
 }
 
-.upload-icon { font-size: 48px; margin-bottom: 12px; }
+.upload-icon { margin-bottom: 12px; line-height: 1; }
 
 .upload-container h1 {
   font-size: 32px;
@@ -210,7 +215,7 @@ html, body { height: 100%; font-family: 'Inter', sans-serif; background: #0f0f0f
 }
 
 .drop-inner { pointer-events: none; }
-.drop-icon { font-size: 40px; margin-bottom: 12px; }
+.drop-icon { margin-bottom: 12px; line-height: 1; }
 .drop-text { font-size: 16px; color: #ccc; margin-bottom: 8px; }
 .drop-text strong { color: #4a9eff; }
 .drop-or { font-size: 13px; color: #666; margin-bottom: 12px; }
@@ -262,7 +267,7 @@ html, body { height: 100%; font-family: 'Inter', sans-serif; background: #0f0f0f
   font-size: 13px;
   color: #777;
 }
-.feature-icon { font-size: 16px; }
+.feature-icon { display: inline-flex; align-items: center; }
 
 /* ===== VIEWER SCREEN ===== */
 #viewer-screen {

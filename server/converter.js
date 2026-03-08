@@ -711,6 +711,11 @@ function extractThemeColors(themeData) {
 
 // ====== Utility ======
 
+// EMU (English Metric Units) to pixels: 1 inch = 914400 EMU, 96 px/inch
+function emuToPx(emu) {
+  return Math.round(parseInt(emu, 10) / 914400 * 96);
+}
+
 function deepFind(obj, key) {
   if (!obj || typeof obj !== 'object') return null;
   if (obj[key]) {

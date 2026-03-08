@@ -226,6 +226,10 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     }
 
     fs.writeFileSync(path.join(presDir, 'data.json'), JSON.stringify(result, null, 2));
+
+    // Cleanup: remove uploaded source file after processing
+    try { fs.unlinkSync(filePath); } catch {}
+
     res.json({ success: true, id, ...result });
   } catch (err) {
     console.error('Upload error:', err);
@@ -234,20 +238,48 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 });
 
 app.get('/api/presentation/:id', (req, res) => {
-  const p = path.join(outputDir, req.params.id, 'data.json');
+  const id = req.params.id;
+  if (!/^[a-f0-9-]+$/i.test(id)) return res.status(400).json({ error: 'Invalid ID.' });
+  const p = path.join(outputDir, id, 'data.json');
   if (!fs.existsSync(p)) return res.status(404).json({ error: 'Not found' });
   res.json(JSON.parse(fs.readFileSync(p, 'utf-8')));
 });
 
+// Error handler (must be after all routes)
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: 'File too large. Maximum size is 100 MB.' });
+    }
+    return res.status(400).json({ error: err.message });
+  }
+  if (err && err.message === 'Only .pptx/.ppt files allowed') {
+    return res.status(400).json({ error: err.message });
+  }
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error.' });
+});
+
 // Export for Electron, or auto-start when run directly
 function startServer(port) {
-  return new Promise((resolve) => {
-    const p = port || PORT;
-    const server = app.listen(p, () => {
-      const actualPort = server.address().port;
-      console.log(`\n  HoloReport PPT Viewer → http://localhost:${actualPort}\n`);
-      resolve(actualPort);
-    });
+  return new Promise((resolve, reject) => {
+    const tryPort = (p) => {
+      const server = app.listen(p, () => {
+        const actualPort = server.address().port;
+        console.log(`\n  HoloReport PPT Viewer → http://localhost:${actualPort}\n`);
+        resolve(actualPort);
+      });
+      server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+          console.log(`Port ${p} in use, trying ${p + 1}...`);
+          server.close();
+          tryPort(p + 1);
+        } else {
+          reject(err);
+        }
+      });
+    };
+    tryPort(port || PORT);
   });
 }
 

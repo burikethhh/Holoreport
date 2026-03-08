@@ -1,6 +1,12 @@
 const { app, BrowserWindow, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 
+// Single instance lock — prevent multiple copies fighting for ports
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+
 // Start the Express server
 const { startServer } = require('./server/index');
 const sync = require('./server/sync');
@@ -9,8 +15,24 @@ let mainWindow;
 let serverPort;
 let tray = null;
 
+// Show existing window when a second instance is attempted
+app.on('second-instance', () => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+  }
+});
+
 app.whenReady().then(async () => {
-  serverPort = await startServer();
+  try {
+    serverPort = await startServer();
+  } catch (err) {
+    const { dialog } = require('electron');
+    dialog.showErrorBox('HoloReport — Startup Error', `Could not start the server:\n${err.message}\n\nThe app will now close.`);
+    app.quit();
+    return;
+  }
 
   // Start auto-sync (checks every 30s, pushes queue when online)
   const config = sync.getConfig();
@@ -117,3 +139,5 @@ app.on('activate', () => {
     mainWindow.show();
   }
 });
+
+} // end single-instance else block
