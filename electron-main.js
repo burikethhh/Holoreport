@@ -63,6 +63,7 @@ app.whenReady().then(async () => {
     height: 800,
     minWidth: 900,
     minHeight: 600,
+    show: true,
     title: 'HoloReport',
     icon: path.join(__dirname, 'public', 'icon.png'),
     autoHideMenuBar: true,
@@ -75,16 +76,16 @@ app.whenReady().then(async () => {
 
   mainWindow.loadURL(`http://localhost:${serverPort}`);
 
-  // Minimize to tray instead of closing — keeps sync alive
-  mainWindow.on('close', (e) => {
-    if (!app.isQuitting) {
-      e.preventDefault();
-      mainWindow.hide();
-    }
+  // Show window once content is ready (prevents blank/hidden window)
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+    mainWindow.focus();
   });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    app.isQuitting = true;
+    app.quit();
   });
 
   // System tray
@@ -97,13 +98,7 @@ app.whenReady().then(async () => {
       label: 'Open HoloReport',
       click: () => {
         if (mainWindow) { mainWindow.show(); mainWindow.focus(); }
-      }
-    },
-    {
-      label: 'Sync Now',
-      click: async () => {
-        const result = await sync.pushSync();
-        console.log('[Tray] Manual sync:', result);
+        else { app.quit(); }
       }
     },
     { type: 'separator' },
@@ -112,6 +107,7 @@ app.whenReady().then(async () => {
       click: () => {
         app.isQuitting = true;
         sync.stopAutoSync();
+        if (tray) { tray.destroy(); tray = null; }
         app.quit();
       }
     }
@@ -123,10 +119,7 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
-  // Don't quit on macOS; on Windows keep running via tray
-  if (process.platform !== 'darwin' && app.isQuitting) {
-    app.quit();
-  }
+  app.quit();
 });
 
 app.on('before-quit', () => {
