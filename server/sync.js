@@ -55,13 +55,14 @@ function addToQueue(userEntry) {
 }
 
 // ===== SYNC CONFIG =====
+const SYNC_DEFAULTS = { syncUrl: 'https://holoreport.vercel.app', enabled: true };
+
 function getConfig() {
   if (!fs.existsSync(CONFIG_FILE)) {
-    const defaults = { syncUrl: '', enabled: false };
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(defaults, null, 2));
-    return defaults;
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(SYNC_DEFAULTS, null, 2));
+    return { ...SYNC_DEFAULTS };
   }
-  try { return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8')); } catch { return { syncUrl: '', enabled: false }; }
+  try { return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8')); } catch { return { ...SYNC_DEFAULTS }; }
 }
 
 function setConfig(config) {
