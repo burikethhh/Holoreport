@@ -1,0 +1,12 @@
+{
+  "name": "holoreport-landing",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.36.3"
+  }
+}

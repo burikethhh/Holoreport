@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HoloReport — PPT Viewer with Gesture Control</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- MediaPipe for hand gesture detection (offline) -->
+  <script src="vendor/mediapipe/hands.js"></script>
+  <script src="vendor/mediapipe/camera_utils.js"></script>
+</head>
+<body>
+
+  <!-- ===== WELCOME SCREEN ===== -->
+  <div id="welcome-screen">
+    <div class="welcome-container">
+      <div class="welcome-icon">📊</div>
+      <h1>HoloReport</h1>
+      <p class="subtitle">PPT Viewer with Gesture Control</p>
+
+      <div class="welcome-form">
+        <label class="input-label" for="user-name-input">What's your name?</label>
+        <input type="text" id="user-name-input" class="name-input" placeholder="Enter your name" maxlength="50" autocomplete="off">
+        <p class="input-error hidden" id="name-error"></p>
+        <button class="btn-continue" id="btn-continue">Continue →</button>
+      </div>
+
+      <div class="welcome-feedback">
+        <p class="feedback-heading">💡 Give us feedback, insights and suggestions!</p>
+        <div class="developer-card">
+          <p class="dev-label">Developer</p>
+          <p class="dev-name">Christian Keth Aguacito</p>
+          <a class="dev-social" href="https://www.facebook.com/christiankethzink" target="_blank" rel="noopener noreferrer">🔗 Facebook</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== UPLOAD SCREEN ===== -->
+  <div id="upload-screen" class="hidden">
+    <div class="upload-container">
+      <div class="upload-icon">📊</div>
+      <h1>HoloReport</h1>
+      <p class="subtitle">PPT Viewer with Gesture Control</p>
+
+      <div class="drop-zone" id="drop-zone">
+        <div class="drop-inner">
+          <div class="drop-icon">📁</div>
+          <p class="drop-text">Drop your <strong>.pptx</strong> file here</p>
+          <p class="drop-or">or</p>
+          <button class="btn-browse" id="btn-browse">Browse Files</button>
+        </div>
+        <input type="file" id="file-input" accept=".pptx,.ppt" hidden>
+      </div>
+
+      <div id="upload-progress" class="hidden">
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <p class="progress-text" id="progress-text">Processing slides...</p>
+      </div>
+
+      <div class="features">
+        <div class="feature">
+          <span class="feature-icon">👋</span>
+          <span>Swipe to navigate slides</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">⌨️</span>
+          <span>Arrow keys & click controls</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">📷</span>
+          <span>Camera-based hand tracking</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== VIEWER SCREEN ===== -->
+  <div id="viewer-screen" class="hidden">
+
+    <!-- Slide display area -->
+    <div id="slide-area">
+      <div id="slide-container"></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div id="toolbar">
+      <div class="toolbar-left">
+        <button class="tool-btn" id="btn-back" title="Back to upload">← Back</button>
+        <span class="slide-info" id="slide-info">Slide 1 of 1</span>
+        <span class="user-badge" id="user-badge"></span>
+      </div>
+      <div class="toolbar-center">
+        <button class="tool-btn" id="btn-prev" title="Previous (←)">◀ Prev</button>
+        <button class="tool-btn" id="btn-next" title="Next (→)">Next ▶</button>
+      </div>
+      <div class="toolbar-right">
+        <button class="tool-btn" id="btn-gesture" title="Toggle gesture control">🖐 Gesture: OFF</button>
+        <button class="tool-btn" id="btn-laser" title="Toggle laser pointer (point index finger)">🔴 Laser: OFF</button>
+        <button class="tool-btn" id="btn-pointer" title="Choose pointer style">🎯 Pointer</button>
+        <button class="tool-btn" id="btn-fullscreen" title="Fullscreen">⛶ Fullscreen</button>
+      </div>
+
+      <!-- Pointer selector panel -->
+      <div id="pointer-panel" class="hidden"></div>
+    </div>
+
+    <!-- Gesture camera feed (small overlay) -->
+    <div id="camera-box" class="hidden">
+      <video id="cam-video" playsinline></video>
+      <canvas id="cam-canvas"></canvas>
+      <div class="cam-label">🖐 Gesture Tracking</div>
+    </div>
+
+    <!-- Laser pointer dot -->
+    <div id="laser-dot" class="hidden"></div>
+
+    <!-- Gesture feedback toast -->
+    <div id="gesture-toast" class="hidden">
+      <span id="toast-icon"></span>
+      <span id="toast-text"></span>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

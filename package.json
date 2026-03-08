@@ -1,0 +1,87 @@
+{
+  "name": "holoreport",
+  "version": "1.0.0",
+  "description": "HoloReport — JARVIS-like gesture-controlled 3D presentation system. Upload PPTs, present with hand gestures in a futuristic holographic HUD.",
+  "main": "electron-main.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "electron": "electron .",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:protected": "node scripts/build-protected.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "jszip": "^3.10.1",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^9.0.0",
+    "xml2js": "^0.6.2"
+  },
+  "keywords": [
+    "holographic",
+    "presentation",
+    "gesture-control",
+    "3D",
+    "JARVIS"
+  ],
+  "author": "HoloReport Team",
+  "license": "MIT",
+  "build": {
+    "appId": "com.holoreport.app",
+    "productName": "HoloReport",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron-main.js",
+      "server/**/*",
+      "public/**/*",
+      "uploads/",
+      "output/",
+      "parsed/**/*",
+      "node_modules/**/*",
+      "!node_modules/electron/**",
+      "!node_modules/electron-builder/**",
+      "!node_modules/javascript-obfuscator/**",
+      "!node_modules/sharp/**",
+      "!multi-agent-dev-environment/**",
+      "!scripts/**",
+      "!src/**",
+      "!dist/**",
+      "!.build/**",
+      "!*.md"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^40.8.0",
+    "electron-builder": "^26.8.1",
+    "javascript-obfuscator": "^5.3.0",
+    "sharp": "^0.34.5"
+  }
+}

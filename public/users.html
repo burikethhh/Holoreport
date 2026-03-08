@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HoloReport — Users</title>
+  <style>
+    @font-face { font-family: 'Inter'; font-weight: 400; src: url('fonts/inter-latin-400-normal.woff2') format('woff2'); }
+    @font-face { font-family: 'Inter'; font-weight: 600; src: url('fonts/inter-latin-600-normal.woff2') format('woff2'); }
+    @font-face { font-family: 'Inter'; font-weight: 700; src: url('fonts/inter-latin-700-normal.woff2') format('woff2'); }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #0f0f0f; color: #e0e0e0; min-height: 100vh; padding: 40px 20px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 28px; color: #fff; margin-bottom: 6px; }
+    h2 { font-size: 18px; color: #fff; margin: 28px 0 12px; }
+    .subtitle { font-size: 14px; color: #666; margin-bottom: 28px; }
+    .stats { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat-card { background: rgba(255,255,255,0.04); border: 1px solid #2a2a2a; border-radius: 10px; padding: 14px 20px; flex: 1; min-width: 120px; }
+    .stat-value { font-size: 28px; font-weight: 700; color: #4a9eff; }
+    .stat-label { font-size: 12px; color: #888; margin-top: 2px; }
+    table { width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.03); border-radius: 10px; overflow: hidden; }
+    thead { background: rgba(255,255,255,0.06); }
+    th { padding: 12px 16px; text-align: left; font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+    td { padding: 12px 16px; font-size: 14px; border-top: 1px solid #1a1a1a; }
+    tr:hover td { background: rgba(74, 158, 255, 0.04); }
+    .name-col { font-weight: 600; color: #fff; }
+    .num-col { color: #4a9eff; font-weight: 600; text-align: center; }
+    .date-col { color: #888; font-size: 13px; }
+    .device-col { color: #aaa; font-size: 12px; }
+    .empty { text-align: center; color: #555; padding: 40px; font-size: 15px; }
+    .back-link { display: inline-block; margin-bottom: 20px; color: #4a9eff; text-decoration: none; font-size: 14px; }
+    .back-link:hover { color: #6db8ff; }
+    .btn { background: #1a1a1a; color: #bbb; border: 1px solid #333; padding: 7px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+    .btn:hover { color: #fff; border-color: #555; }
+    .btn-primary { background: #4a9eff; color: #fff; border-color: #4a9eff; }
+    .btn-primary:hover { background: #3a8eef; }
+    .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .sync-panel { background: rgba(255,255,255,0.03); border: 1px solid #2a2a2a; border-radius: 10px; padding: 18px; margin-bottom: 24px; }
+    .sync-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+    .sync-row:last-child { margin-bottom: 0; }
+    .sync-input { background: rgba(255,255,255,0.06); border: 1px solid #333; border-radius: 6px; color: #fff; padding: 8px 12px; font-size: 13px; font-family: 'Inter', sans-serif; flex: 1; min-width: 200px; }
+    .sync-input:focus { outline: none; border-color: #4a9eff; }
+    .sync-label { font-size: 13px; color: #888; min-width: 80px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .badge-online { background: rgba(46,204,113,0.15); color: #2ecc71; }
+    .badge-offline { background: rgba(231,76,60,0.15); color: #e74c3c; }
+    .badge-synced { background: rgba(74,158,255,0.15); color: #4a9eff; }
+    .badge-local { background: rgba(255,255,255,0.08); color: #888; }
+  </style>
+</head>
+<body>
+  <!-- LOGIN GATE -->
+  <div id="login-gate" class="container" style="display:flex;align-items:center;justify-content:center;min-height:80vh;">
+    <div style="text-align:center;width:320px;">
+      <h1 style="margin-bottom:6px;">&#128274; Admin Login</h1>
+      <p class="subtitle" style="margin-bottom:24px;">Enter credentials to access the dashboard</p>
+      <div id="login-error" style="color:#e74c3c;font-size:13px;margin-bottom:12px;display:none;"></div>
+      <input type="text" id="login-user" class="sync-input" placeholder="Username" style="width:100%;margin-bottom:10px;">
+      <input type="password" id="login-pass" class="sync-input" placeholder="Password" style="width:100%;margin-bottom:16px;">
+      <button class="btn btn-primary" id="btn-login" style="width:100%;padding:10px;">Login</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD (hidden until authenticated) -->
+  <div id="dashboard" class="container" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <a href="/" class="back-link" style="margin:0;">&larr; Back to HoloReport</a>
+      <button class="btn" id="btn-logout" style="font-size:12px;">Logout</button>
+    </div>
+    <h1>&#128203; Users Dashboard</h1>
+    <p class="subtitle">All users across all devices</p>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value" id="total-users">&mdash;</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="total-visits">&mdash;</div>
+        <div class="stat-label">Total Visits</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="total-devices">&mdash;</div>
+        <div class="stat-label">Devices</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="queue-count">&mdash;</div>
+        <div class="stat-label">Queued to Sync</div>
+      </div>
+    </div>
+
+    <!-- Sync settings -->
+    <h2>&#128259; Sync Settings</h2>
+    <div class="sync-panel">
+      <div class="sync-row">
+        <span class="sync-label">Status</span>
+        <span class="badge" id="net-badge">checking...</span>
+        <span class="badge" id="sync-badge">—</span>
+        <span style="flex:1"></span>
+        <span style="font-size:12px;color:#666;" id="device-info"></span>
+      </div>
+      <div class="sync-row">
+        <span class="sync-label">Sync URL</span>
+        <input type="text" class="sync-input" id="sync-url" placeholder="http://your-central-server:3000">
+      </div>
+      <div class="sync-row">
+        <span class="sync-label">Enabled</span>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="sync-enabled"> <span style="font-size:13px;color:#aaa;">Auto-sync when online</span>
+        </label>
+        <span style="flex:1"></span>
+        <button class="btn" id="btn-save-sync">Save</button>
+        <button class="btn btn-primary" id="btn-push-sync">Sync Now</button>
+      </div>
+    </div>
+
+    <div class="header-row">
+      <h2 style="margin:0;">&#128100; User List</h2>
+      <button class="btn" onclick="loadAll()">&#8635; Refresh</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th style="text-align:center">Visits</th>
+          <th>Device</th>
+          <th>First Seen</th>
+          <th>Last Seen</th>
+        </tr>
+      </thead>
+      <tbody id="user-tbody">
+        <tr><td colspan="6" class="empty">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    // ===== AUTH =====
+    let adminToken = sessionStorage.getItem('adminToken') || null;
+
+    function authHeaders() {
+      return { 'Content-Type': 'application/json', 'x-admin-token': adminToken || '' };
+    }
+
+    async function checkAuth() {
+      if (!adminToken) return showLogin();
+      try {
+        const res = await fetch('/api/admin/verify', { headers: authHeaders() });
+        const data = await res.json();
+        if (data.valid) showDashboard();
+        else showLogin();
+      } catch { showLogin(); }
+    }
+
+    function showLogin() {
+      adminToken = null;
+      sessionStorage.removeItem('adminToken');
+      document.getElementById('login-gate').style.display = 'flex';
+      document.getElementById('dashboard').style.display = 'none';
+    }
+
+    function showDashboard() {
+      document.getElementById('login-gate').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadAll();
+    }
+
+    document.getElementById('btn-login').addEventListener('click', async () => {
+      const username = document.getElementById('login-user').value.trim();
+      const password = document.getElementById('login-pass').value;
+      const errEl = document.getElementById('login-error');
+      errEl.style.display = 'none';
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (data.token) {
+          adminToken = data.token;
+          sessionStorage.setItem('adminToken', adminToken);
+          showDashboard();
+        } else {
+          errEl.textContent = data.error || 'Login failed.';
+          errEl.style.display = 'block';
+        }
+      } catch {
+        errEl.textContent = 'Connection error.';
+        errEl.style.display = 'block';
+      }
+    });
+
+    document.getElementById('login-pass').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('btn-login').click();
+    });
+
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+      await fetch('/api/admin/logout', { method: 'POST', headers: authHeaders() }).catch(() => {});
+      showLogin();
+    });
+    function formatDate(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+        ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    async function loadUsers() {
+      const res = await fetch('/api/users', { headers: authHeaders() });
+      if (res.status === 401) { showLogin(); throw new Error('unauthorized'); }
+      return res.json();
+    }
+
+    async function loadSyncStatus() {
+      const res = await fetch('/api/sync/status', { headers: authHeaders() });
+      if (res.status === 401) { showLogin(); throw new Error('unauthorized'); }
+      return res.json();
+    }
+
+    async function loadAll() {
+      try {
+        const [users, status] = await Promise.all([loadUsers(), loadSyncStatus()]);
+
+        // Stats
+        document.getElementById('total-users').textContent = users.length;
+        document.getElementById('total-visits').textContent = users.reduce((s, u) => s + (u.visits || 1), 0);
+        const devices = new Set(users.map(u => u.deviceId || 'local'));
+        document.getElementById('total-devices').textContent = devices.size;
+        document.getElementById('queue-count').textContent = status.queueLength;
+
+        // Network badge
+        const netBadge = document.getElementById('net-badge');
+        netBadge.textContent = status.online ? 'Online' : 'Offline';
+        netBadge.className = 'badge ' + (status.online ? 'badge-online' : 'badge-offline');
+
+        // Sync badge
+        const syncBadge = document.getElementById('sync-badge');
+        syncBadge.textContent = status.config.enabled ? 'Sync ON' : 'Sync OFF';
+        syncBadge.className = 'badge ' + (status.config.enabled ? 'badge-synced' : 'badge-local');
+
+        // Device info
+        document.getElementById('device-info').textContent =
+          'This device: ' + (status.device.deviceName || status.device.deviceId);
+
+        // Sync config
+        document.getElementById('sync-url').value = status.config.syncUrl || '';
+        document.getElementById('sync-enabled').checked = status.config.enabled;
+
+        // Users table
+        const tbody = document.getElementById('user-tbody');
+        if (users.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty">No users yet.</td></tr>';
+          return;
+        }
+
+        users.sort((a, b) => new Date(b.lastSeen) - new Date(a.lastSeen));
+        tbody.innerHTML = users.map((u, i) =>
+          '<tr>' +
+            '<td style="color:#555">' + (i + 1) + '</td>' +
+            '<td class="name-col">' + escapeHtml(u.name) +
+              (u.synced ? ' <span class="badge badge-synced" style="font-size:10px">synced</span>' : '') + '</td>' +
+            '<td class="num-col">' + (u.visits || 1) + '</td>' +
+            '<td class="device-col">' + escapeHtml(u.deviceName || 'this device') + '</td>' +
+            '<td class="date-col">' + formatDate(u.firstSeen) + '</td>' +
+            '<td class="date-col">' + formatDate(u.lastSeen) + '</td>' +
+          '</tr>'
+        ).join('');
+      } catch (err) {
+        document.getElementById('user-tbody').innerHTML =
+          '<tr><td colspan="6" class="empty">Failed to load users.</td></tr>';
+      }
+    }
+
+    // Save sync config
+    document.getElementById('btn-save-sync').addEventListener('click', async () => {
+      const syncUrl = document.getElementById('sync-url').value.trim();
+      const enabled = document.getElementById('sync-enabled').checked;
+      await fetch('/api/sync/config', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ syncUrl, enabled })
+      });
+      loadAll();
+    });
+
+    // Push sync now
+    document.getElementById('btn-push-sync').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-push-sync');
+      btn.textContent = 'Syncing...';
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/sync/push', { method: 'POST', headers: authHeaders() });
+        const result = await res.json();
+        btn.textContent = result.pushed > 0 ? 'Synced ' + result.pushed + '!' : (result.status === 'offline' ? 'Offline' : 'Nothing to sync');
+      } catch {
+        btn.textContent = 'Failed';
+      }
+      setTimeout(() => { btn.textContent = 'Sync Now'; btn.disabled = false; loadAll(); }, 2000);
+    });
+
+    checkAuth();
+  </script>
+</body>
+</html>

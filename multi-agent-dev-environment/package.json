@@ -1,0 +1,28 @@
+{
+  "name": "multi-agent-dev-environment",
+  "version": "1.0.0",
+  "description": "A multi-agent development environment with distinct roles for full stack development, research, and assistance.",
+  "main": "src/orchestrator.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/orchestrator.js",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "dependencies": {
+    "typescript": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/multi-agent-dev-environment.git"
+  },
+  "keywords": [
+    "multi-agent",
+    "development",
+    "typescript"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

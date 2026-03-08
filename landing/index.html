@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HoloReport — Gesture-Controlled Presentation System</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --accent: #4a9eff;
+      --accent2: #00d4ff;
+      --bg: #0a0e1a;
+      --surface: rgba(255,255,255,0.03);
+      --border: rgba(255,255,255,0.08);
+      --text: #e0e0e0;
+      --text-dim: #888;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        linear-gradient(rgba(74,158,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(74,158,255,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Glow orb */
+    .glow-orb {
+      position: fixed;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .glow-orb.blue { background: var(--accent); top: -100px; right: -100px; }
+    .glow-orb.cyan { background: var(--accent2); bottom: -150px; left: -100px; }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* NAV */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 0;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      text-decoration: none;
+    }
+    .logo img { width: 36px; height: 36px; border-radius: 8px; }
+    .logo span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover { color: #fff; }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 100px 0 60px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(74,158,255,0.1);
+      border: 1px solid rgba(74,158,255,0.2);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      letter-spacing: 0.5px;
+    }
+    .hero h1 {
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+    .hero h1 .gradient {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--text-dim);
+      max-width: 600px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+    }
+    .cta-row {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #3a7fdf);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(74,158,255,0.3);
+    }
+    .btn-primary:hover { box-shadow: 0 6px 30px rgba(74,158,255,0.5); transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: #fff; }
+    .btn svg { width: 18px; height: 18px; }
+    .size-note { font-size: 12px; color: var(--text-dim); margin-top: 12px; }
+
+    /* PREVIEW */
+    .preview {
+      margin: 60px 0;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      position: relative;
+    }
+    .preview-img {
+      width: 100%;
+      display: block;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background: #111;
+    }
+    .preview-placeholder {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: linear-gradient(135deg, #0f1628 0%, #162040 50%, #0f1628 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .preview-placeholder svg { width: 80px; height: 80px; opacity: 0.3; }
+    .preview-placeholder span { color: var(--text-dim); font-size: 14px; }
+
+    /* FEATURES */
+    .features {
+      padding: 80px 0;
+    }
+    .features h2 {
+      text-align: center;
+      font-size: 32px;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    .features .subtitle {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 16px;
+      margin-bottom: 48px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      transition: border-color 0.2s;
+    }
+    .feature-card:hover { border-color: rgba(74,158,255,0.3); }
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(74,158,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      font-size: 22px;
+    }
+    .feature-card h3 { font-size: 16px; color: #fff; margin-bottom: 8px; font-weight: 600; }
+    .feature-card p { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
+
+    /* HOW IT WORKS */
+    .how {
+      padding: 80px 0;
+    }
+    .how h2 { text-align: center; font-size: 32px; color: #fff; margin-bottom: 48px; }
+    .steps {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .step {
+      flex: 1;
+      min-width: 220px;
+      max-width: 300px;
+      text-align: center;
+      padding: 24px;
+    }
+    .step-num {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .step h3 { font-size: 15px; color: #fff; margin-bottom: 6px; }
+    .step p { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      text-align: center;
+    }
+    footer p { font-size: 13px; color: var(--text-dim); }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    .footer-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .social-links { display: flex; gap: 16px; }
+    .social-links a { color: var(--text-dim); transition: color 0.2s; }
+    .social-links a:hover { color: var(--accent); }
+
+    @media (max-width: 640px) {
+      .hero { padding: 60px 0 40px; }
+      .nav-links { display: none; }
+      .steps { flex-direction: column; align-items: center; }
+    }
+
+    /* Download counter */
+    .download-stats {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+    .dl-stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+    .dl-stat .count {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .dl-stat svg { width: 14px; height: 14px; opacity: 0.6; }
+  </style>
+</head>
+<body>
+  <div class="glow-orb blue"></div>
+  <div class="glow-orb cyan"></div>
+
+  <div class="container">
+    <!-- NAV -->
+    <nav>
+      <a href="#" class="logo">
+        <img src="icon.svg" alt="HoloReport">
+        <span>HoloReport</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">How It Works</a>
+        <a href="#download" class="btn btn-primary" style="padding:8px 20px;font-size:13px;">Download</a>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero" id="download">
+      <div class="badge">&#9889; v1.0.0 — Now Available for Windows</div>
+      <h1>Present with<br><span class="gradient">Hand Gestures</span></h1>
+      <p>Upload your PowerPoint, wave your hand to navigate slides. A futuristic holographic presentation system — no clicker needed.</p>
+      <div class="cta-row">
+        <a href="#" class="btn btn-primary" id="download-installer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Download Installer
+        </a>
+        <a href="#" class="btn btn-outline" id="download-portable">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Portable (.exe)
+        </a>
+      </div>
+      <p class="size-note">Windows 10/11 &bull; x64 &bull; ~275 MB &bull; No installation required for portable version</p>
+      <div class="download-stats">
+        <div class="dl-stat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          <span class="count" id="dl-total">—</span> downloads
+        </div>
+        <div class="dl-stat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <span class="count" id="dl-installer">—</span> installer &bull;
+          <span class="count" id="dl-portable">—</span> portable
+        </div>
+      </div>
+    </section>
+
+    <!-- PREVIEW AREA -->
+    <div class="preview">
+      <div class="preview-placeholder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <path d="M8 21h8M12 17v4"/>
+          <path d="M9 10l2 2 4-4" stroke="#4a9eff"/>
+        </svg>
+        <span>Gesture-controlled slide navigation in action</span>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
+    <section class="features" id="features">
+      <h2>Everything You Need</h2>
+      <p class="subtitle">A complete gesture-controlled presentation system, fully offline.</p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">&#9995;</div>
+          <h3>Hand Gesture Control</h3>
+          <p>Navigate slides with natural swipe gestures using your webcam. Powered by MediaPipe hand tracking — no extra hardware needed.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#128302;</div>
+          <h3>Laser Pointer</h3>
+          <p>Use your index finger as a virtual laser pointer with 11 customizable pointer styles. Point at anything on screen.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#128268;</div>
+          <h3>Fully Offline</h3>
+          <p>Works without internet. All AI models, fonts, and assets are bundled. Perfect for secure environments and presentations on the go.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#128196;</div>
+          <h3>PowerPoint Support</h3>
+          <p>Drag-and-drop your .pptx files. Slides are rendered with high fidelity using PowerPoint COM, LibreOffice, or built-in XML parser.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#128101;</div>
+          <h3>User Tracking</h3>
+          <p>Know who uses your presentations. Built-in welcome screen captures user names with a secure admin dashboard.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#128274;</div>
+          <h3>Secured &amp; Protected</h3>
+          <p>Source code is obfuscated, packed in ASAR archive. Admin dashboard requires authentication. Your content stays safe.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="how" id="how">
+      <h2>How It Works</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Launch HoloReport</h3>
+          <p>Open the app. Enter your name on the welcome screen.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>Upload a Presentation</h3>
+          <p>Drag and drop your .pptx file or click to browse.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Enable Gesture Mode</h3>
+          <p>Turn on your webcam and start navigating with hand swipes.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <h3>Present Like a Pro</h3>
+          <p>Use the laser pointer, go fullscreen, and wow your audience.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-row">
+        <p>HoloReport v1.0.0 &mdash; Built by <a href="https://www.facebook.com/christiankethzink" target="_blank" rel="noopener">Keth</a> &#8482;</p>
+        <div class="social-links">
+          <a href="https://www.facebook.com/christiankethzink" target="_blank" rel="noopener" title="Facebook">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // ===== DOWNLOAD URLS =====
+    // Replace these with your actual file URLs (GitHub Releases, Google Drive, etc.)
+    const DOWNLOAD_URLS = {
+      installer: '#',  // e.g. 'https://github.com/youruser/holoreport/releases/download/v1.0.0/HoloReport-Setup-1.0.0.exe'
+      portable:  '#'   // e.g. 'https://github.com/youruser/holoreport/releases/download/v1.0.0/HoloReport-1.0.0.exe'
+    };
+
+    // ===== LOAD DOWNLOAD COUNTS =====
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/track');
+        if (!res.ok) return;
+        const data = await res.json();
+        document.getElementById('dl-total').textContent = data.total.toLocaleString();
+        document.getElementById('dl-installer').textContent = data.installer.toLocaleString();
+        document.getElementById('dl-portable').textContent = data.portable.toLocaleString();
+      } catch { /* stats unavailable — that's fine */ }
+    }
+    loadStats();
+
+    // ===== TRACK DOWNLOADS =====
+    async function trackDownload(type) {
+      try {
+        await fetch('/api/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type })
+        });
+      } catch { /* tracking failed silently */ }
+    }
+
+    document.getElementById('download-installer').addEventListener('click', async (e) => {
+      if (DOWNLOAD_URLS.installer === '#') return;
+      e.preventDefault();
+      await trackDownload('installer');
+      window.location.href = DOWNLOAD_URLS.installer;
+    });
+
+    document.getElementById('download-portable').addEventListener('click', async (e) => {
+      if (DOWNLOAD_URLS.portable === '#') return;
+      e.preventDefault();
+      await trackDownload('portable');
+      window.location.href = DOWNLOAD_URLS.portable;
+    });
+  </script>
+</body>
+</html>

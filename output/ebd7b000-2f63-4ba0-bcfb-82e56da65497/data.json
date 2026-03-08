@@ -1,0 +1,121 @@
+{
+  "slideCount": 23,
+  "slides": [
+    {
+      "slideNumber": 1,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_1.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 2,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_2.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 3,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_3.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 4,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_4.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 5,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_5.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 6,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_6.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 7,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_7.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 8,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_8.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 9,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_9.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 10,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_10.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 11,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_11.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 12,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_12.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 13,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_13.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 14,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_14.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 15,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_15.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 16,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_16.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 17,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_17.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 18,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_18.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 19,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_19.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 20,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_20.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 21,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_21.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 22,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_22.png",
+      "type": "image"
+    },
+    {
+      "slideNumber": 23,
+      "image": "/output/ebd7b000-2f63-4ba0-bcfb-82e56da65497/slides/slide_23.png",
+      "type": "image"
+    }
+  ],
+  "method": "powerpoint"
+}
