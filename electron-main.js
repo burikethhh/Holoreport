@@ -1,6 +1,12 @@
 const { app, BrowserWindow, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 
+// Writable data directory — inside asar everything is read-only,
+// so redirect all data writes to Electron's userData folder.
+if (app.isPackaged) {
+  process.env.HOLOREPORT_DATA_DIR = app.getPath('userData');
+}
+
 // Single instance lock — prevent multiple copies fighting for ports
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
@@ -76,11 +82,19 @@ app.whenReady().then(async () => {
 
   mainWindow.loadURL(`http://localhost:${serverPort}`);
 
-  // Show window once content is ready (prevents blank/hidden window)
+  // Ensure window is visible
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     mainWindow.focus();
   });
+
+  // Fallback: if ready-to-show doesn't fire within 5s, force show
+  setTimeout(() => {
+    if (mainWindow && !mainWindow.isVisible()) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  }, 5000);
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -88,10 +102,11 @@ app.whenReady().then(async () => {
     app.quit();
   });
 
-  // System tray
-  const trayIcon = nativeImage.createFromPath(path.join(__dirname, 'public', 'icon.png'));
-  tray = new Tray(trayIcon.isEmpty() ? nativeImage.createEmpty() : trayIcon);
-  tray.setToolTip('HoloReport — Running in background');
+  // System tray (wrapped in try-catch — tray failure must not crash the app)
+  try {
+    const trayIcon = nativeImage.createFromPath(path.join(__dirname, 'public', 'icon.png'));
+    tray = new Tray(trayIcon.isEmpty() ? nativeImage.createEmpty() : trayIcon);
+    tray.setToolTip('HoloReport — Running in background');
 
   const trayMenu = Menu.buildFromTemplate([
     {
@@ -116,6 +131,9 @@ app.whenReady().then(async () => {
   tray.on('double-click', () => {
     if (mainWindow) { mainWindow.show(); mainWindow.focus(); }
   });
+  } catch (trayErr) {
+    console.error('[Tray] Failed to create system tray:', trayErr.message);
+  }
 });
 
 app.on('window-all-closed', () => {

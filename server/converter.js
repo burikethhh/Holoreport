@@ -7,7 +7,10 @@ const xml2js = require('xml2js');
 // ====== PowerPoint COM method (TRUE 1:1 fidelity) ======
 
 async function convertWithPowerPoint(pptxPath, outputDir, id) {
-  const scriptPath = path.join(__dirname, 'export-slides.ps1');
+  // In packaged app, the ps1 is unpacked outside the asar
+  let scriptPath = path.join(__dirname, 'export-slides.ps1');
+  const unpackedPath = scriptPath.replace('app.asar', 'app.asar.unpacked');
+  if (fs.existsSync(unpackedPath)) scriptPath = unpackedPath;
   if (!fs.existsSync(scriptPath)) throw new Error('export-slides.ps1 not found');
 
   const imgDir = path.join(outputDir, 'slides');

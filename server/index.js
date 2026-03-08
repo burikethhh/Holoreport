@@ -28,9 +28,10 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-// Directories
-const uploadsDir = path.join(__dirname, '..', 'uploads');
-const outputDir = path.join(__dirname, '..', 'output');
+// Directories — use writable path when packaged (asar is read-only)
+const dataDir = process.env.HOLOREPORT_DATA_DIR || path.join(__dirname, '..');
+const uploadsDir = path.join(dataDir, 'uploads');
+const outputDir = path.join(dataDir, 'output');
 [uploadsDir, outputDir].forEach(dir => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
@@ -81,7 +82,7 @@ app.get('/api/admin/verify', (req, res) => {
 });
 
 // ===== USERS =====
-const usersFile = path.join(__dirname, '..', 'users.json');
+const usersFile = path.join(dataDir, 'users.json');
 
 function loadUsers() {
   if (!fs.existsSync(usersFile)) return [];

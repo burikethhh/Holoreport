@@ -31,6 +31,9 @@
     "appId": "com.holoreport.app",
     "productName": "HoloReport",
     "asar": true,
+    "asarUnpack": [
+      "server/export-slides.ps1"
+    ],
     "directories": {
       "output": "dist"
     },

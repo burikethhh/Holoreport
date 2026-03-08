@@ -13,7 +13,7 @@ const http = require('http');
 const { v4: uuidv4 } = require('uuid');
 const os = require('os');
 
-const DATA_DIR = path.join(__dirname, '..');
+const DATA_DIR = process.env.HOLOREPORT_DATA_DIR || path.join(__dirname, '..');
 const QUEUE_FILE = path.join(DATA_DIR, 'sync-queue.json');
 const CONFIG_FILE = path.join(DATA_DIR, 'sync-config.json');
 const DEVICE_FILE = path.join(DATA_DIR, 'device-id.json');
