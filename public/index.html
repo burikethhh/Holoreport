@@ -25,6 +25,12 @@
         <button class="btn-continue" id="btn-continue">Continue →</button>
       </div>
 
+      <div class="free-warning">
+        <svg class="inline-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <strong>This software is 100% FREE.</strong> If anyone sold this to you, you have been scammed.
+        <br>Report abuse to the developer below.
+      </div>
+
       <div class="welcome-feedback">
         <p class="feedback-heading"><svg class="inline-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f0c040" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 4 12.7V17H8v-2.3A7 7 0 0 1 12 2z"/></svg> Give us feedback, insights and suggestions!</p>
         <div class="developer-card">
@@ -119,6 +125,16 @@
     <div id="gesture-toast" class="hidden">
       <span id="toast-icon"></span>
       <span id="toast-text"></span>
+    </div>
+  </div>
+
+  <!-- Kill switch overlay (hidden by default) -->
+  <div id="kill-screen" class="hidden">
+    <div class="kill-container">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ff4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+      <h1>Application Disabled</h1>
+      <p id="kill-message">This version of HoloReport has been deactivated by the developer.</p>
+      <p class="kill-contact">Contact: <a href="https://www.facebook.com/christiankethzink" target="_blank" rel="noopener noreferrer">Christian Keth Aguacito</a></p>
     </div>
   </div>
 

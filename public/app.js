@@ -1,6 +1,57 @@
 (function () {
   'use strict';
 
+  // ===== KILL SWITCH =====
+  const KILLSWITCH_URL = 'https://landing-one-bice.vercel.app/api/killswitch';
+  const KILLSWITCH_KEY = 'holoreport_killed';
+
+  function showKillScreen(message) {
+    const killEl = document.getElementById('kill-screen');
+    const msgEl = document.getElementById('kill-message');
+    if (killEl) {
+      killEl.classList.remove('hidden');
+      if (msgEl && message) msgEl.textContent = message;
+    }
+    // Hide all other screens
+    ['welcome-screen', 'upload-screen', 'viewer-screen'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    });
+  }
+
+  async function checkKillSwitch() {
+    // Check cached state first
+    try {
+      const cached = JSON.parse(localStorage.getItem(KILLSWITCH_KEY) || 'null');
+      if (cached && cached.killed) {
+        showKillScreen(cached.message);
+      }
+    } catch {}
+
+    // Try remote check (will work when online, silently fail when offline)
+    try {
+      const resp = await fetch(KILLSWITCH_URL, { cache: 'no-store' });
+      if (resp.ok) {
+        const data = await resp.json();
+        localStorage.setItem(KILLSWITCH_KEY, JSON.stringify(data));
+        if (data.killed) {
+          showKillScreen(data.message);
+        } else {
+          // If previously killed but now un-killed, restore access
+          const killEl = document.getElementById('kill-screen');
+          if (killEl) killEl.classList.add('hidden');
+        }
+      }
+    } catch {
+      // Offline — rely on cached state
+    }
+  }
+
+  // Check immediately and every 60 seconds
+  checkKillSwitch();
+  setInterval(checkKillSwitch, 60000);
+  window.addEventListener('online', () => setTimeout(checkKillSwitch, 2000));
+
   // ===== SVG ICONS =====
   const SVG_ICONS = {
     gesture: '<svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v6M14 10V4a2 2 0 0 0-4 0v7M10 10.5V7a2 2 0 0 0-4 0v9M22 14c0 5-4 8-9 8H9a8 8 0 0 1-6-3"/><path d="M18 11a2 2 0 0 1 4 0v3"/></svg>',
