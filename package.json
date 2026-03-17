@@ -1,6 +1,6 @@
 {
   "name": "holoreport",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "HoloReport — JARVIS-like gesture-controlled 3D presentation system. Upload PPTs, present with hand gestures in a futuristic holographic HUD.",
   "main": "electron-main.js",
   "scripts": {

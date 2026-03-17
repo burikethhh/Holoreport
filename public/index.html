@@ -11,18 +11,35 @@
 </head>
 <body>
 
+  <!-- ===== ANIMATED BACKGROUND (shared by welcome & upload) ===== -->
+  <canvas id="bg-canvas"></canvas>
+
   <!-- ===== WELCOME SCREEN ===== -->
-  <div id="welcome-screen">
-    <div class="welcome-container">
-      <div class="welcome-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4a9eff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/></svg></div>
-      <h1>HoloReport</h1>
-      <p class="subtitle">PPT Viewer with Gesture Control</p>
+  <div id="welcome-screen" class="screen screen-active">
+    <div class="welcome-container glass-card">
+      <div class="logo-group">
+        <div class="logo-icon pulse-glow">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="url(#logoGrad)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <defs><linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4a9eff"/><stop offset="100%" stop-color="#00d4ff"/></linearGradient></defs>
+            <path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/>
+          </svg>
+        </div>
+        <h1 class="app-title">HoloReport</h1>
+        <p class="app-subtitle">Gesture-Controlled Presentation System</p>
+        <span class="version-badge">v2.0.0</span>
+      </div>
 
       <div class="welcome-form">
         <label class="input-label" for="user-name-input">What's your name?</label>
-        <input type="text" id="user-name-input" class="name-input" placeholder="Enter your name" maxlength="50" autocomplete="off">
+        <div class="input-wrapper">
+          <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <input type="text" id="user-name-input" class="name-input" placeholder="Enter your full name" maxlength="50" autocomplete="off" spellcheck="false">
+        </div>
         <p class="input-error hidden" id="name-error"></p>
-        <button class="btn-continue" id="btn-continue">Continue →</button>
+        <button class="btn-primary btn-continue" id="btn-continue">
+          <span>Get Started</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
       </div>
 
       <div class="free-warning">
@@ -32,90 +49,165 @@
       </div>
 
       <div class="welcome-feedback">
-        <p class="feedback-heading"><svg class="inline-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f0c040" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 4 12.7V17H8v-2.3A7 7 0 0 1 12 2z"/></svg> Give us feedback, insights and suggestions!</p>
+        <p class="feedback-heading">
+          <svg class="inline-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f0c040" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 4 12.7V17H8v-2.3A7 7 0 0 1 12 2z"/></svg>
+          Feedback &amp; Suggestions
+        </p>
         <div class="developer-card">
-          <p class="dev-label">Developer</p>
-          <p class="dev-name">Christian Keth Aguacito</p>
-          <a class="dev-social" href="https://www.facebook.com/christiankethzink" target="_blank" rel="noopener noreferrer"><svg class="inline-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.8 1.8"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.8-1.8"/></svg> Facebook</a>
+          <div class="dev-avatar">CK</div>
+          <div class="dev-info">
+            <p class="dev-name">Christian Keth Aguacito</p>
+            <p class="dev-role">Developer</p>
+          </div>
+          <a class="dev-social" href="https://www.facebook.com/christiankethzink" target="_blank" rel="noopener noreferrer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ===== UPLOAD SCREEN ===== -->
-  <div id="upload-screen" class="hidden">
-    <div class="upload-container">
-      <div class="upload-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4a9eff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/></svg></div>
-      <h1>HoloReport</h1>
-      <p class="subtitle">PPT Viewer with Gesture Control</p>
+  <div id="upload-screen" class="screen">
+    <div class="upload-container glass-card">
+      <div class="upload-header">
+        <button class="btn-ghost" id="btn-back-upload" title="Back to welcome">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <div>
+          <h2 class="upload-title">Upload Presentation</h2>
+          <p class="upload-subtitle">Drag &amp; drop or browse for a .pptx file</p>
+        </div>
+        <span class="user-pill" id="upload-user-pill"></span>
+      </div>
 
       <div class="drop-zone" id="drop-zone">
         <div class="drop-inner">
-          <div class="drop-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4a9eff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="drop-icon-wrap">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="url(#uploadGrad)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <defs><linearGradient id="uploadGrad" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#4a9eff"/><stop offset="100%" stop-color="#00d4ff"/></linearGradient></defs>
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
           <p class="drop-text">Drop your <strong>.pptx</strong> file here</p>
           <p class="drop-or">or</p>
-          <button class="btn-browse" id="btn-browse">Browse Files</button>
+          <button class="btn-primary btn-browse" id="btn-browse">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span>Browse Files</span>
+          </button>
         </div>
         <input type="file" id="file-input" accept=".pptx,.ppt" hidden>
       </div>
 
+      <!-- Upload progress (replaces drop zone during upload) -->
       <div id="upload-progress" class="hidden">
-        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-        <p class="progress-text" id="progress-text">Processing slides...</p>
+        <div class="progress-ring-wrap">
+          <svg class="progress-ring" width="100" height="100" viewBox="0 0 100 100">
+            <circle class="progress-ring-bg" cx="50" cy="50" r="42" fill="none" stroke="#222" stroke-width="6"/>
+            <circle class="progress-ring-fill" id="progress-ring-fill" cx="50" cy="50" r="42" fill="none" stroke="url(#progressGrad)" stroke-width="6" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264" transform="rotate(-90 50 50)"/>
+            <defs><linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4a9eff"/><stop offset="100%" stop-color="#00d4ff"/></linearGradient></defs>
+          </svg>
+          <span class="progress-pct" id="progress-pct">0%</span>
+        </div>
+        <div class="progress-phases">
+          <div class="phase active" id="phase-upload"><span class="phase-dot"></span>Uploading</div>
+          <div class="phase" id="phase-parse"><span class="phase-dot"></span>Parsing slides</div>
+          <div class="phase" id="phase-render"><span class="phase-dot"></span>Preparing viewer</div>
+        </div>
+        <p class="progress-text" id="progress-text">Uploading file...</p>
       </div>
 
-      <div class="features">
-        <div class="feature">
-          <span class="feature-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v6M14 10V4a2 2 0 0 0-4 0v7M10 10.5V7a2 2 0 0 0-4 0v9M22 14c0 5-4 8-9 8H9a8 8 0 0 1-6-3"/><path d="M18 11a2 2 0 0 1 4 0v3"/></svg></span>
-          <span>Swipe to navigate slides</span>
-        </div>
-        <div class="feature">
-          <span class="feature-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></svg></span>
-          <span>Arrow keys & click controls</span>
-        </div>
-        <div class="feature">
-          <span class="feature-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
-          <span>Camera-based hand tracking</span>
-        </div>
+      <div class="feature-pills">
+        <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v6M14 10V4a2 2 0 0 0-4 0v7M10 10.5V7a2 2 0 0 0-4 0v9M22 14c0 5-4 8-9 8H9a8 8 0 0 1-6-3"/><path d="M18 11a2 2 0 0 1 4 0v3"/></svg> Gesture Control</span>
+        <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></svg> Laser Pointer</span>
+        <span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01"/></svg> Keyboard &amp; Click</span>
       </div>
     </div>
   </div>
 
   <!-- ===== VIEWER SCREEN ===== -->
-  <div id="viewer-screen" class="hidden">
+  <div id="viewer-screen" class="screen">
+
+    <!-- Slide progress bar (thin line at top) -->
+    <div id="slide-progress-bar">
+      <div id="slide-progress-fill"></div>
+    </div>
 
     <!-- Slide display area -->
     <div id="slide-area">
       <div id="slide-container"></div>
+      <!-- Slide nav arrows (overlay on slide) -->
+      <button class="slide-nav-arrow slide-nav-left" id="slide-nav-left" title="Previous slide">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="slide-nav-arrow slide-nav-right" id="slide-nav-right" title="Next slide">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
     </div>
 
     <!-- Toolbar -->
     <div id="toolbar">
       <div class="toolbar-left">
-        <button class="tool-btn" id="btn-back" title="Back to upload">← Back</button>
-        <span class="slide-info" id="slide-info">Slide 1 of 1</span>
+        <button class="tool-btn" id="btn-back" title="Back to upload">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <span class="slide-info" id="slide-info">1 / 1</span>
         <span class="user-badge" id="user-badge"></span>
       </div>
       <div class="toolbar-center">
-        <button class="tool-btn" id="btn-prev" title="Previous (←)">◀ Prev</button>
-        <button class="tool-btn" id="btn-next" title="Next (→)">Next ▶</button>
+        <button class="tool-btn" id="btn-prev" title="Previous (Left Arrow)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="tool-btn" id="btn-overview" title="Slide overview (O)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </button>
+        <button class="tool-btn" id="btn-next" title="Next (Right Arrow)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
       </div>
       <div class="toolbar-right">
-        <button class="tool-btn" id="btn-gesture" title="Toggle gesture control"><svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v6M14 10V4a2 2 0 0 0-4 0v7M10 10.5V7a2 2 0 0 0-4 0v9M22 14c0 5-4 8-9 8H9a8 8 0 0 1-6-3"/><path d="M18 11a2 2 0 0 1 4 0v3"/></svg> Gesture: OFF</button>
-        <button class="tool-btn" id="btn-laser" title="Toggle laser pointer (point index finger)"><svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg> Laser: OFF</button>
-        <button class="tool-btn" id="btn-pointer" title="Choose pointer style"><svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Pointer</button>
-        <button class="tool-btn" id="btn-fullscreen" title="Fullscreen"><svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg> Fullscreen</button>
+        <button class="tool-btn" id="btn-gesture" title="Toggle gesture control (G)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v6M14 10V4a2 2 0 0 0-4 0v7M10 10.5V7a2 2 0 0 0-4 0v9M22 14c0 5-4 8-9 8H9a8 8 0 0 1-6-3"/><path d="M18 11a2 2 0 0 1 4 0v3"/></svg>
+        </button>
+        <button class="tool-btn" id="btn-laser" title="Toggle laser pointer (L)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
+        </button>
+        <button class="tool-btn" id="btn-pointer" title="Choose pointer style">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        </button>
+        <button class="tool-btn" id="btn-fullscreen" title="Fullscreen (F)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        </button>
+        <button class="tool-btn" id="btn-help" title="Help & shortcuts (?)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </button>
       </div>
 
       <!-- Pointer selector panel -->
       <div id="pointer-panel" class="hidden"></div>
     </div>
 
+    <!-- Slide overview grid -->
+    <div id="overview-panel" class="hidden">
+      <div class="overview-header">
+        <h3>Slide Overview</h3>
+        <button class="btn-ghost overview-close" id="overview-close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="overview-grid" id="overview-grid"></div>
+    </div>
+
     <!-- Gesture camera feed (small overlay) -->
     <div id="camera-box" class="hidden">
       <video id="cam-video" playsinline></video>
       <canvas id="cam-canvas"></canvas>
-      <div class="cam-label"><svg class="inline-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v6M14 10V4a2 2 0 0 0-4 0v7M10 10.5V7a2 2 0 0 0-4 0v9M22 14c0 5-4 8-9 8H9a8 8 0 0 1-6-3"/><path d="M18 11a2 2 0 0 1 4 0v3"/></svg> Gesture Tracking</div>
+      <div class="cam-label">
+        <span class="cam-dot"></span> Tracking
+      </div>
+      <button class="cam-close" id="cam-close" title="Stop gesture">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
 
     <!-- Laser pointer dot -->
@@ -125,6 +217,53 @@
     <div id="gesture-toast" class="hidden">
       <span id="toast-icon"></span>
       <span id="toast-text"></span>
+    </div>
+
+    <!-- Help overlay -->
+    <div id="help-overlay" class="hidden">
+      <div class="help-card glass-card">
+        <div class="help-header">
+          <h3>Keyboard Shortcuts &amp; Controls</h3>
+          <button class="btn-ghost" id="help-close">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="help-grid">
+          <div class="help-section">
+            <h4>Navigation</h4>
+            <div class="shortcut"><kbd>&rarr;</kbd> / <kbd>Space</kbd><span>Next slide</span></div>
+            <div class="shortcut"><kbd>&larr;</kbd><span>Previous slide</span></div>
+            <div class="shortcut"><kbd>Home</kbd><span>First slide</span></div>
+            <div class="shortcut"><kbd>End</kbd><span>Last slide</span></div>
+            <div class="shortcut"><kbd>O</kbd><span>Slide overview</span></div>
+          </div>
+          <div class="help-section">
+            <h4>Controls</h4>
+            <div class="shortcut"><kbd>G</kbd><span>Toggle gesture control</span></div>
+            <div class="shortcut"><kbd>L</kbd><span>Toggle laser pointer</span></div>
+            <div class="shortcut"><kbd>F</kbd><span>Toggle fullscreen</span></div>
+            <div class="shortcut"><kbd>?</kbd><span>Show this help</span></div>
+            <div class="shortcut"><kbd>Esc</kbd><span>Close overlays</span></div>
+          </div>
+          <div class="help-section">
+            <h4>Gestures</h4>
+            <div class="shortcut"><span class="gesture-label">Swipe left</span><span>Next slide</span></div>
+            <div class="shortcut"><span class="gesture-label">Swipe right</span><span>Previous slide</span></div>
+            <div class="shortcut"><span class="gesture-label">Point index finger</span><span>Laser pointer</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm dialog -->
+  <div id="confirm-dialog" class="hidden">
+    <div class="confirm-card glass-card">
+      <p id="confirm-message">Are you sure?</p>
+      <div class="confirm-actions">
+        <button class="btn-ghost" id="confirm-cancel">Cancel</button>
+        <button class="btn-primary btn-danger" id="confirm-ok">Leave</button>
+      </div>
     </div>
   </div>
 
@@ -137,6 +276,9 @@
       <p class="kill-contact">Contact: <a href="https://www.facebook.com/christiankethzink" target="_blank" rel="noopener noreferrer">Christian Keth Aguacito</a></p>
     </div>
   </div>
+
+  <!-- Toast container (stacking) -->
+  <div id="toast-container"></div>
 
   <script src="app.js"></script>
 </body>

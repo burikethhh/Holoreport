@@ -12,23 +12,15 @@
       killEl.classList.remove('hidden');
       if (msgEl && message) msgEl.textContent = message;
     }
-    // Hide all other screens
-    ['welcome-screen', 'upload-screen', 'viewer-screen'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.classList.add('hidden');
-    });
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('screen-active'));
   }
 
   async function checkKillSwitch() {
-    // Check cached state first
     try {
       const cached = JSON.parse(localStorage.getItem(KILLSWITCH_KEY) || 'null');
-      if (cached && cached.killed) {
-        showKillScreen(cached.message);
-      }
+      if (cached && cached.killed) showKillScreen(cached.message);
     } catch {}
 
-    // Try remote check (will work when online, silently fail when offline)
     try {
       const resp = await fetch(KILLSWITCH_URL, { cache: 'no-store' });
       if (resp.ok) {
@@ -37,32 +29,89 @@
         if (data.killed) {
           showKillScreen(data.message);
         } else {
-          // If previously killed but now un-killed, restore access
           const killEl = document.getElementById('kill-screen');
           if (killEl) killEl.classList.add('hidden');
         }
       }
-    } catch {
-      // Offline — rely on cached state
-    }
+    } catch {}
   }
 
-  // Check immediately and every 60 seconds
   checkKillSwitch();
   setInterval(checkKillSwitch, 60000);
   window.addEventListener('online', () => setTimeout(checkKillSwitch, 2000));
 
-  // ===== SVG ICONS =====
-  const SVG_ICONS = {
-    gesture: '<svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v6M14 10V4a2 2 0 0 0-4 0v7M10 10.5V7a2 2 0 0 0-4 0v9M22 14c0 5-4 8-9 8H9a8 8 0 0 1-6-3"/><path d="M18 11a2 2 0 0 1 4 0v3"/></svg>',
-    laser: '<svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>',
-    prev: '<svg class="toast-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>',
-    next: '<svg class="toast-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>'
-  };
+  // ===== ANIMATED PARTICLE BACKGROUND =====
+  const bgCanvas = document.getElementById('bg-canvas');
+  const bgCtx = bgCanvas ? bgCanvas.getContext('2d') : null;
+  let particles = [];
+  let bgAnimId = null;
 
-  function setBtnText(btn, iconKey, label) {
-    btn.innerHTML = SVG_ICONS[iconKey] + ' ' + label;
+  function initBgCanvas() {
+    if (!bgCanvas || !bgCtx) return;
+    bgCanvas.width = window.innerWidth;
+    bgCanvas.height = window.innerHeight;
+
+    particles = [];
+    const count = Math.floor((bgCanvas.width * bgCanvas.height) / 12000);
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * bgCanvas.width,
+        y: Math.random() * bgCanvas.height,
+        r: Math.random() * 1.5 + 0.5,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        o: Math.random() * 0.4 + 0.1,
+      });
+    }
+    if (!bgAnimId) animateBg();
   }
+
+  function animateBg() {
+    if (!bgCtx) return;
+    bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+
+    for (const p of particles) {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0) p.x = bgCanvas.width;
+      if (p.x > bgCanvas.width) p.x = 0;
+      if (p.y < 0) p.y = bgCanvas.height;
+      if (p.y > bgCanvas.height) p.y = 0;
+
+      bgCtx.beginPath();
+      bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      bgCtx.fillStyle = `rgba(74,158,255,${p.o})`;
+      bgCtx.fill();
+    }
+
+    // Draw connection lines between nearby particles
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = dx * dx + dy * dy;
+        if (dist < 10000) {
+          bgCtx.beginPath();
+          bgCtx.moveTo(particles[i].x, particles[i].y);
+          bgCtx.lineTo(particles[j].x, particles[j].y);
+          bgCtx.strokeStyle = `rgba(74,158,255,${0.04 * (1 - dist / 10000)})`;
+          bgCtx.lineWidth = 0.5;
+          bgCtx.stroke();
+        }
+      }
+    }
+
+    bgAnimId = requestAnimationFrame(animateBg);
+  }
+
+  window.addEventListener('resize', () => {
+    if (bgCanvas) {
+      bgCanvas.width = window.innerWidth;
+      bgCanvas.height = window.innerHeight;
+    }
+  });
+
+  initBgCanvas();
 
   // ===== STATE =====
   let slides = [];
@@ -82,7 +131,7 @@
   let laserSmooth = { x: 0.5, y: 0.5 };
   const LASER_SMOOTHING = 0.35;
 
-  // Sound effects (MP3)
+  // Sound effects
   const sfxNext = new Audio('sounds/Next.mp3');
   const sfxPrev = new Audio('sounds/Previous.mp3');
   sfxNext.preload = 'auto';
@@ -93,7 +142,7 @@
       const sfx = direction === 'next' ? sfxNext : sfxPrev;
       sfx.currentTime = 0;
       sfx.play();
-    } catch (_) { /* audio not available */ }
+    } catch (_) {}
   }
 
   // Pointer selector
@@ -103,14 +152,69 @@
   // User
   let userName = '';
 
-  // ===== DOM =====
+  // ===== DOM HELPERS =====
   const $ = (sel) => document.getElementById(sel);
 
+  // Screen system
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('screen-active'));
+    const screen = $(id);
+    if (screen) {
+      // Small delay for transition to apply after removing others
+      requestAnimationFrame(() => screen.classList.add('screen-active'));
+    }
+    // Hide bg canvas on viewer
+    if (bgCanvas) bgCanvas.style.display = id === 'viewer-screen' ? 'none' : '';
+  }
+
+  // ===== TOAST SYSTEM (stacking) =====
+  const toastContainer = $('toast-container');
+
+  function showNotification(message, type) {
+    type = type || 'info';
+    if (!toastContainer) return;
+    const el = document.createElement('div');
+    el.className = 'toast-item toast-' + type;
+    el.textContent = message;
+    toastContainer.appendChild(el);
+
+    setTimeout(() => {
+      el.classList.add('toast-exit');
+      setTimeout(() => el.remove(), 250);
+    }, 2500);
+  }
+
+  // ===== CONFIRM DIALOG =====
+  const confirmDialog = $('confirm-dialog');
+  const confirmMessage = $('confirm-message');
+  const confirmOk = $('confirm-ok');
+  const confirmCancel = $('confirm-cancel');
+  let confirmResolver = null;
+
+  function showConfirm(message) {
+    return new Promise(function (resolve) {
+      confirmResolver = resolve;
+      if (confirmMessage) confirmMessage.textContent = message;
+      if (confirmDialog) confirmDialog.classList.remove('hidden');
+    });
+  }
+
+  if (confirmOk) confirmOk.addEventListener('click', function () {
+    if (confirmDialog) confirmDialog.classList.add('hidden');
+    if (confirmResolver) { confirmResolver(true); confirmResolver = null; }
+  });
+  if (confirmCancel) confirmCancel.addEventListener('click', function () {
+    if (confirmDialog) confirmDialog.classList.add('hidden');
+    if (confirmResolver) { confirmResolver(false); confirmResolver = null; }
+  });
+
+  // ===== DOM REFERENCES =====
   const welcomeScreen = $('welcome-screen');
   const userNameInput = $('user-name-input');
   const nameError = $('name-error');
   const btnContinue = $('btn-continue');
   const userBadge = $('user-badge');
+  const uploadUserPill = $('upload-user-pill');
 
   const uploadScreen = $('upload-screen');
   const viewerScreen = $('viewer-screen');
@@ -118,22 +222,33 @@
   const fileInput = $('file-input');
   const btnBrowse = $('btn-browse');
   const uploadProgress = $('upload-progress');
-  const progressFill = $('progress-fill');
+  const progressRingFill = $('progress-ring-fill');
+  const progressPct = $('progress-pct');
   const progressText = $('progress-text');
+  const phaseUpload = $('phase-upload');
+  const phaseParse = $('phase-parse');
+  const phaseRender = $('phase-render');
+  const btnBackUpload = $('btn-back-upload');
 
   const slideArea = $('slide-area');
   const slideContainer = $('slide-container');
   const slideInfo = $('slide-info');
+  const slideProgressFill = $('slide-progress-fill');
   const btnPrev = $('btn-prev');
   const btnNext = $('btn-next');
   const btnBack = $('btn-back');
   const btnGesture = $('btn-gesture');
   const btnFullscreen = $('btn-fullscreen');
+  const btnOverview = $('btn-overview');
+  const btnHelp = $('btn-help');
+  const slideNavLeft = $('slide-nav-left');
+  const slideNavRight = $('slide-nav-right');
 
   const cameraBox = $('camera-box');
   const camVideo = $('cam-video');
   const camCanvas = $('cam-canvas');
-  const camCtx = camCanvas.getContext('2d');
+  const camCtx = camCanvas ? camCanvas.getContext('2d') : null;
+  const camClose = $('cam-close');
 
   const gestureToast = $('gesture-toast');
   const toastIcon = $('toast-icon');
@@ -143,33 +258,40 @@
   const btnPointer = $('btn-pointer');
   const pointerPanel = $('pointer-panel');
 
+  const overviewPanel = $('overview-panel');
+  const overviewGrid = $('overview-grid');
+  const overviewClose = $('overview-close');
+
+  const helpOverlay = $('help-overlay');
+  const helpClose = $('help-close');
+
   // ===== POINTER SELECTOR =====
   function initPointerSelector() {
+    if (!pointerPanel) return;
     for (let i = 1; i <= POINTER_COUNT; i++) {
-      const src = `pointers/pointer${i}.jpg`;
+      const src = 'pointers/pointer' + i + '.jpg';
       const opt = document.createElement('button');
       opt.className = 'pointer-option' + (i === 1 ? ' selected' : '');
-      opt.title = `Pointer ${i}`;
-      opt.innerHTML = `<img src="${src}" alt="Pointer ${i}" draggable="false">`;
-      opt.addEventListener('click', () => selectPointer(src, opt));
+      opt.title = 'Pointer ' + i;
+      opt.innerHTML = '<img src="' + src + '" alt="Pointer ' + i + '" draggable="false">';
+      opt.addEventListener('click', function () { selectPointer(src, opt); });
       pointerPanel.appendChild(opt);
     }
   }
 
   function selectPointer(src, optEl) {
     selectedPointer = src;
-    laserDot.style.backgroundImage = `url('${src}')`;
-    pointerPanel.querySelectorAll('.pointer-option').forEach(el => el.classList.remove('selected'));
+    if (laserDot) laserDot.style.backgroundImage = "url('" + src + "')";
+    if (pointerPanel) pointerPanel.querySelectorAll('.pointer-option').forEach(function (el) { el.classList.remove('selected'); });
     optEl.classList.add('selected');
   }
 
-  btnPointer.addEventListener('click', () => {
-    pointerPanel.classList.toggle('hidden');
+  if (btnPointer) btnPointer.addEventListener('click', function () {
+    if (pointerPanel) pointerPanel.classList.toggle('hidden');
   });
 
-  // Close panel when clicking outside
-  document.addEventListener('click', (e) => {
-    if (!pointerPanel.contains(e.target) && e.target !== btnPointer) {
+  document.addEventListener('click', function (e) {
+    if (pointerPanel && !pointerPanel.contains(e.target) && e.target !== btnPointer) {
       pointerPanel.classList.add('hidden');
     }
   });
@@ -178,194 +300,234 @@
 
   // ===== WELCOME / NAME INPUT =====
   function validateName(name) {
-    const trimmed = name.trim();
+    var trimmed = name.trim();
     if (!trimmed) return 'Please enter your name.';
     if (trimmed.length < 2) return 'Name must be at least 2 characters.';
     if (trimmed.length > 50) return 'Name must be 50 characters or less.';
-    if (!/^[a-zA-Z\s.'-]+$/.test(trimmed)) return 'Name can only contain letters, spaces, hyphens, apostrophes, and periods.';
+    if (!/^[a-zA-Z\s.'\-]+$/.test(trimmed)) return 'Name can only contain letters, spaces, hyphens, apostrophes, and periods.';
     return null;
   }
 
   function enterApp(name) {
     userName = name.trim();
     localStorage.setItem('holoreport_user', userName);
-    userBadge.innerHTML = '<svg class="inline-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ' + userName;
-    welcomeScreen.classList.add('hidden');
-    uploadScreen.classList.remove('hidden');
+    if (userBadge) userBadge.textContent = userName;
+    if (uploadUserPill) uploadUserPill.textContent = userName;
+    showScreen('upload-screen');
 
-    // Register user on server (fire-and-forget)
+    // Register user (fire-and-forget)
     fetch('/api/users', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: userName })
-    }).catch(() => {});
+    }).catch(function () {});
   }
 
-  btnContinue.addEventListener('click', () => {
-    const err = validateName(userNameInput.value);
+  if (btnContinue) btnContinue.addEventListener('click', function () {
+    var err = validateName(userNameInput.value);
     if (err) {
-      nameError.textContent = err;
-      nameError.classList.remove('hidden');
-      userNameInput.classList.add('input-invalid');
+      if (nameError) { nameError.textContent = err; nameError.classList.remove('hidden'); }
+      if (userNameInput) userNameInput.classList.add('input-invalid');
     } else {
-      nameError.classList.add('hidden');
-      userNameInput.classList.remove('input-invalid');
+      if (nameError) nameError.classList.add('hidden');
+      if (userNameInput) userNameInput.classList.remove('input-invalid');
       enterApp(userNameInput.value);
     }
   });
 
-  userNameInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') btnContinue.click();
-  });
+  if (userNameInput) {
+    userNameInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') btnContinue.click(); });
+    userNameInput.addEventListener('input', function () {
+      userNameInput.classList.remove('input-invalid');
+      if (nameError) nameError.classList.add('hidden');
+    });
+  }
 
-  userNameInput.addEventListener('input', () => {
-    userNameInput.classList.remove('input-invalid');
-    nameError.classList.add('hidden');
-  });
-
-  // Restore session if previously entered
-  const savedUser = localStorage.getItem('holoreport_user');
+  // Session restore
+  var savedUser = localStorage.getItem('holoreport_user');
   if (savedUser) {
     enterApp(savedUser);
   }
 
   // ===== UPLOAD =====
-  btnBrowse.addEventListener('click', (e) => {
-    e.stopPropagation();
-    fileInput.click();
+  if (btnBackUpload) btnBackUpload.addEventListener('click', function () {
+    localStorage.removeItem('holoreport_user');
+    userName = '';
+    if (userNameInput) userNameInput.value = '';
+    showScreen('welcome-screen');
   });
-  dropZone.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', (e) => {
+
+  if (btnBrowse) btnBrowse.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (fileInput) fileInput.click();
+  });
+  if (dropZone) dropZone.addEventListener('click', function () { if (fileInput) fileInput.click(); });
+  if (fileInput) fileInput.addEventListener('change', function (e) {
     if (e.target.files[0]) handleUpload(e.target.files[0]);
   });
 
-  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-  dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropZone.classList.remove('drag-over');
-    if (e.dataTransfer.files[0]) handleUpload(e.dataTransfer.files[0]);
-  });
+  if (dropZone) {
+    dropZone.addEventListener('dragover', function (e) { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', function () { dropZone.classList.remove('drag-over'); });
+    dropZone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      if (e.dataTransfer.files[0]) handleUpload(e.dataTransfer.files[0]);
+    });
+  }
+
+  // Ring progress helper
+  var RING_CIRC = 264; // 2 * PI * 42
+  function setRingProgress(pct) {
+    var offset = RING_CIRC - (RING_CIRC * pct / 100);
+    if (progressRingFill) progressRingFill.setAttribute('stroke-dashoffset', offset);
+    if (progressPct) progressPct.textContent = Math.round(pct) + '%';
+  }
+
+  function setPhase(phase) {
+    [phaseUpload, phaseParse, phaseRender].forEach(function (el) {
+      if (el) { el.classList.remove('active', 'done'); }
+    });
+    if (phase >= 1 && phaseUpload) phaseUpload.classList.add(phase > 1 ? 'done' : 'active');
+    if (phase >= 2 && phaseParse) phaseParse.classList.add(phase > 2 ? 'done' : 'active');
+    if (phase >= 3 && phaseRender) phaseRender.classList.add('active');
+  }
 
   async function handleUpload(file) {
     if (!file.name.endsWith('.pptx') && !file.name.endsWith('.ppt')) {
-      alert('Please upload a .pptx or .ppt file.');
+      showNotification('Please upload a .pptx or .ppt file.', 'error');
       return;
     }
 
-    dropZone.classList.add('hidden');
-    uploadProgress.classList.remove('hidden');
+    if (dropZone) dropZone.classList.add('hidden');
+    if (uploadProgress) uploadProgress.classList.remove('hidden');
+
+    setRingProgress(0);
+    setPhase(1);
+    if (progressText) progressText.textContent = 'Uploading file...';
 
     // Animate progress
-    let pct = 0;
-    const tick = setInterval(() => {
-      pct = Math.min(pct + Math.random() * 8, 85);
-      progressFill.style.width = pct + '%';
+    var pct = 0;
+    var tick = setInterval(function () {
+      pct = Math.min(pct + Math.random() * 6, 40);
+      setRingProgress(pct);
     }, 200);
 
-    const formData = new FormData();
+    var formData = new FormData();
     formData.append('file', file);
+    var parseTick = null;
 
     try {
-      progressText.textContent = 'Uploading and processing slides...';
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      var res = await fetch('/api/upload', { method: 'POST', body: formData });
       clearInterval(tick);
 
       if (!res.ok) throw new Error('Upload failed');
 
-      progressFill.style.width = '100%';
-      progressText.textContent = 'Done! Loading viewer...';
+      // Phase 2: parsing
+      setPhase(2);
+      if (progressText) progressText.textContent = 'Parsing slides...';
+      pct = 50;
+      setRingProgress(pct);
 
-      const data = await res.json();
+      parseTick = setInterval(function () {
+        pct = Math.min(pct + Math.random() * 5, 80);
+        setRingProgress(pct);
+      }, 150);
+
+      var data = await res.json();
+      clearInterval(parseTick);
       slides = data.slides;
       currentIndex = 0;
 
-      await new Promise(r => setTimeout(r, 400));
+      // Phase 3: preparing viewer
+      setPhase(3);
+      if (progressText) progressText.textContent = 'Preparing viewer...';
+      setRingProgress(95);
+      await new Promise(function (r) { setTimeout(r, 400); });
+      setRingProgress(100);
+
+      await new Promise(function (r) { setTimeout(r, 300); });
       showViewer();
     } catch (err) {
       clearInterval(tick);
+      if (parseTick) clearInterval(parseTick);
       console.error(err);
-      progressText.textContent = 'Error processing file. Please try again.';
-      progressFill.style.background = '#ff4444';
-      setTimeout(() => {
-        dropZone.classList.remove('hidden');
-        uploadProgress.classList.add('hidden');
-        progressFill.style.width = '0%';
-        progressFill.style.background = '';
-        fileInput.value = '';
+      if (progressText) progressText.textContent = 'Error processing file. Please try again.';
+      showNotification('Upload failed. Please try again.', 'error');
+      setTimeout(function () {
+        if (dropZone) dropZone.classList.remove('hidden');
+        if (uploadProgress) uploadProgress.classList.add('hidden');
+        setRingProgress(0);
+        if (fileInput) fileInput.value = '';
       }, 2000);
     }
   }
 
   // ===== VIEWER =====
   function showViewer() {
-    uploadScreen.classList.add('hidden');
-    viewerScreen.classList.remove('hidden');
+    showScreen('viewer-screen');
     renderSlide();
+    showNotification('Presentation loaded — ' + slides.length + ' slides', 'success');
   }
 
   function renderSlide() {
-    const slide = slides[currentIndex];
+    var slide = slides[currentIndex];
     if (!slide) return;
 
-    slideInfo.textContent = `Slide ${currentIndex + 1} of ${slides.length}`;
+    if (slideInfo) slideInfo.textContent = (currentIndex + 1) + ' / ' + slides.length;
+
+    // Update progress bar
+    if (slideProgressFill) {
+      slideProgressFill.style.width = ((currentIndex + 1) / slides.length * 100) + '%';
+    }
 
     // Transition
-    slideContainer.className = '';
-    slideContainer.classList.add(currentIndex >= 0 ? 'slide-enter' : '');
-
-    slideContainer.innerHTML = '';
+    if (slideContainer) {
+      slideContainer.className = '';
+      slideContainer.classList.add('slide-enter');
+      slideContainer.innerHTML = '';
+    }
 
     if (slide.type === 'image' && slide.image) {
-      // LibreOffice output — faithful image
-      const img = document.createElement('img');
+      var img = document.createElement('img');
       img.className = 'slide-img';
       img.src = slide.image;
-      img.alt = `Slide ${slide.slideNumber}`;
-      slideContainer.appendChild(img);
+      img.alt = 'Slide ' + slide.slideNumber;
+      if (slideContainer) slideContainer.appendChild(img);
     } else {
-      // Parser output — render positioned elements
-      const wrapper = document.createElement('div');
+      var wrapper = document.createElement('div');
       wrapper.className = 'parsed-slide';
+      var sW = slide.width || 960;
+      var sH = slide.height || 540;
+      wrapper.style.aspectRatio = sW + ' / ' + sH;
 
-      // Use slide dimensions for aspect ratio
-      const sW = slide.width || 960;
-      const sH = slide.height || 540;
-      wrapper.style.aspectRatio = `${sW} / ${sH}`;
-
-      // Background
       applyBackground(wrapper, slide.background);
 
-      // Elements
-      for (const el of (slide.elements || [])) {
-        const dom = renderElement(el, sW, sH);
+      (slide.elements || []).forEach(function (el) {
+        var dom = renderElement(el, sW, sH);
         if (dom) wrapper.appendChild(dom);
-      }
+      });
 
-      // Fallback if empty
-      if (!slide.elements?.length) {
-        const empty = document.createElement('div');
+      if (!slide.elements || !slide.elements.length) {
+        var empty = document.createElement('div');
         empty.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#999;font-size:24px;';
-        empty.textContent = `Slide ${slide.slideNumber}`;
+        empty.textContent = 'Slide ' + slide.slideNumber;
         wrapper.appendChild(empty);
       }
 
-      slideContainer.appendChild(wrapper);
+      if (slideContainer) slideContainer.appendChild(wrapper);
     }
   }
 
   function applyBackground(el, bg) {
-    if (!bg) {
-      el.style.backgroundColor = '#ffffff';
-      return;
-    }
+    if (!bg) { el.style.backgroundColor = '#ffffff'; return; }
     if (bg.type === 'solid') {
       el.style.backgroundColor = bg.color;
     } else if (bg.type === 'gradient' && bg.stops && bg.stops.length >= 2) {
-      const stopsCss = bg.stops.map(s => `${s.color} ${s.pos}%`).join(', ');
-      el.style.background = `linear-gradient(180deg, ${stopsCss})`;
+      var stopsCss = bg.stops.map(function (s) { return s.color + ' ' + s.pos + '%'; }).join(', ');
+      el.style.background = 'linear-gradient(180deg, ' + stopsCss + ')';
     } else if (bg.type === 'image' && bg.src) {
-      el.style.backgroundImage = `url("${bg.src}")`;
+      el.style.backgroundImage = 'url("' + bg.src + '")';
       el.style.backgroundSize = 'cover';
       el.style.backgroundPosition = 'center';
     } else {
@@ -374,54 +536,43 @@
   }
 
   function renderElement(el, slideW, slideH) {
-    // Convert pixel positions to percentages of the slide
-    const left = (el.x / slideW * 100).toFixed(4) + '%';
-    const top = (el.y / slideH * 100).toFixed(4) + '%';
-    const width = (el.w / slideW * 100).toFixed(4) + '%';
-    const height = (el.h / slideH * 100).toFixed(4) + '%';
-    // Scale factor: the wrapper fills the viewport width; 
-    // font sizes from PPT are in pt — we scale them relative to slide width
-    const scaleFactor = 1; // Will be adjusted via CSS transform in the wrapper
+    var left = (el.x / slideW * 100).toFixed(4) + '%';
+    var top = (el.y / slideH * 100).toFixed(4) + '%';
+    var width = (el.w / slideW * 100).toFixed(4) + '%';
+    var height = (el.h / slideH * 100).toFixed(4) + '%';
 
     if (el.type === 'image' && el.image) {
-      const img = document.createElement('img');
+      var img = document.createElement('img');
       img.className = 'slide-el slide-el-img';
       img.src = el.image;
       img.alt = '';
       img.draggable = false;
-      img.style.cssText = `left:${left};top:${top};width:${width};height:${height};`;
-      if (el.rotation) img.style.transform = `rotate(${el.rotation}deg)`;
+      img.style.cssText = 'left:' + left + ';top:' + top + ';width:' + width + ';height:' + height + ';';
+      if (el.rotation) img.style.transform = 'rotate(' + el.rotation + 'deg)';
       return img;
     }
 
     if (el.type === 'shape') {
-      const div = document.createElement('div');
+      var div = document.createElement('div');
       div.className = 'slide-el slide-el-shape';
-      div.style.cssText = `left:${left};top:${top};width:${width};height:${height};`;
-      if (el.rotation) div.style.transform = `rotate(${el.rotation}deg)`;
+      div.style.cssText = 'left:' + left + ';top:' + top + ';width:' + width + ';height:' + height + ';';
+      if (el.rotation) div.style.transform = 'rotate(' + el.rotation + 'deg)';
 
-      // Shape fill
       if (el.fill) {
         if (el.fill.type === 'solid') div.style.backgroundColor = el.fill.color;
-        else if (el.fill.type === 'gradient' && el.fill.stops?.length >= 2) {
-          const stopsCss = el.fill.stops.map(s => `${s.color} ${s.pos}%`).join(', ');
-          div.style.background = `linear-gradient(180deg, ${stopsCss})`;
+        else if (el.fill.type === 'gradient' && el.fill.stops && el.fill.stops.length >= 2) {
+          var stopsCss = el.fill.stops.map(function (s) { return s.color + ' ' + s.pos + '%'; }).join(', ');
+          div.style.background = 'linear-gradient(180deg, ' + stopsCss + ')';
         } else if (el.fill.type === 'image' && el.fill.src) {
-          div.style.backgroundImage = `url("${el.fill.src}")`;
+          div.style.backgroundImage = 'url("' + el.fill.src + '")';
           div.style.backgroundSize = 'cover';
         }
       }
 
-      // Shape border
-      if (el.border) {
-        div.style.border = `${el.border.width}px solid ${el.border.color}`;
-      }
-
-      // Shape geometry (round corners for rounded rect, circle for ellipse)
+      if (el.border) div.style.border = el.border.width + 'px solid ' + el.border.color;
       if (el.shapeType === 'roundRect') div.style.borderRadius = '8px';
       else if (el.shapeType === 'ellipse') div.style.borderRadius = '50%';
 
-      // Vertical alignment for text in shape
       if (el.vertAlign === 'ctr') {
         div.style.display = 'flex';
         div.style.flexDirection = 'column';
@@ -432,31 +583,28 @@
         div.style.justifyContent = 'flex-end';
       }
 
-      // Padding
       if (el.padLeft !== undefined) div.style.paddingLeft = el.padLeft + 'px';
       if (el.padTop !== undefined) div.style.paddingTop = el.padTop + 'px';
       if (el.padRight !== undefined) div.style.paddingRight = el.padRight + 'px';
       if (el.padBottom !== undefined) div.style.paddingBottom = el.padBottom + 'px';
 
-      // Text paragraphs
-      for (const para of (el.paragraphs || [])) {
-        const pEl = document.createElement('div');
+      (el.paragraphs || []).forEach(function (para) {
+        var pEl = document.createElement('div');
         pEl.className = 'slide-para';
         pEl.style.textAlign = para.align || 'left';
         if (para.lineSpacing) pEl.style.lineHeight = (para.lineSpacing / 100).toFixed(2);
         if (para.spaceBefore) pEl.style.marginTop = para.spaceBefore + 'pt';
         if (para.marginLeft) pEl.style.paddingLeft = para.marginLeft + 'px';
 
-        // Bullet
         if (para.bulletChar) {
-          const bullet = document.createElement('span');
+          var bullet = document.createElement('span');
           bullet.className = 'slide-bullet';
           bullet.textContent = para.bulletChar + ' ';
           pEl.appendChild(bullet);
         }
 
-        for (const run of para.runs) {
-          const span = document.createElement('span');
+        para.runs.forEach(function (run) {
+          var span = document.createElement('span');
           span.className = 'slide-run';
           span.textContent = run.text;
           if (run.fontSize) span.style.fontSize = run.fontSize + 'pt';
@@ -464,116 +612,210 @@
           if (run.italic) span.style.fontStyle = 'italic';
           if (run.underline) span.style.textDecoration = 'underline';
           if (run.color) span.style.color = run.color;
-          if (run.fontFamily) span.style.fontFamily = `"${run.fontFamily}", sans-serif`;
+          if (run.fontFamily) span.style.fontFamily = '"' + run.fontFamily + '", sans-serif';
           pEl.appendChild(span);
-        }
+        });
 
         div.appendChild(pEl);
-      }
+      });
 
       return div;
     }
 
     if (el.type === 'connector') {
-      const div = document.createElement('div');
-      div.className = 'slide-el slide-el-connector';
-      div.style.cssText = `left:${left};top:${top};width:${width};height:${height};`;
+      var cdiv = document.createElement('div');
+      cdiv.className = 'slide-el slide-el-connector';
+      cdiv.style.cssText = 'left:' + left + ';top:' + top + ';width:' + width + ';height:' + height + ';';
       if (el.border) {
-        if (el.w > el.h) {
-          div.style.borderBottom = `${el.border.width}px solid ${el.border.color}`;
-        } else {
-          div.style.borderLeft = `${el.border.width}px solid ${el.border.color}`;
-        }
+        if (el.w > el.h) cdiv.style.borderBottom = el.border.width + 'px solid ' + el.border.color;
+        else cdiv.style.borderLeft = el.border.width + 'px solid ' + el.border.color;
       }
-      if (el.rotation) div.style.transform = `rotate(${el.rotation}deg)`;
-      return div;
+      if (el.rotation) cdiv.style.transform = 'rotate(' + el.rotation + 'deg)';
+      return cdiv;
     }
 
     return null;
   }
 
+  // ===== NAVIGATION =====
   function goNext() {
     if (currentIndex < slides.length - 1) {
       playSwipeSound('next');
-      slideContainer.className = 'slide-exit-left';
-      setTimeout(() => { currentIndex++; renderSlide(); }, 200);
+      if (slideContainer) slideContainer.className = 'slide-exit-left';
+      setTimeout(function () { currentIndex++; renderSlide(); }, 250);
     }
   }
 
   function goPrev() {
     if (currentIndex > 0) {
       playSwipeSound('prev');
-      slideContainer.className = 'slide-exit-right';
-      setTimeout(() => { currentIndex--; renderSlide(); }, 200);
+      if (slideContainer) slideContainer.className = 'slide-exit-right';
+      setTimeout(function () { currentIndex--; renderSlide(); }, 250);
     }
   }
 
-  // Button controls
-  btnNext.addEventListener('click', goNext);
-  btnPrev.addEventListener('click', goPrev);
+  function goToSlide(index) {
+    if (index >= 0 && index < slides.length && index !== currentIndex) {
+      playSwipeSound(index > currentIndex ? 'next' : 'prev');
+      if (slideContainer) slideContainer.className = index > currentIndex ? 'slide-exit-left' : 'slide-exit-right';
+      setTimeout(function () { currentIndex = index; renderSlide(); }, 250);
+    }
+    closeOverlays();
+  }
 
-  btnBack.addEventListener('click', () => {
+  // Slide nav arrows
+  if (slideNavLeft) slideNavLeft.addEventListener('click', function (e) { e.stopPropagation(); goPrev(); });
+  if (slideNavRight) slideNavRight.addEventListener('click', function (e) { e.stopPropagation(); goNext(); });
+
+  // Button controls
+  if (btnNext) btnNext.addEventListener('click', goNext);
+  if (btnPrev) btnPrev.addEventListener('click', goPrev);
+
+  if (btnBack) btnBack.addEventListener('click', async function () {
+    if (slides.length > 0) {
+      var leave = await showConfirm('Leave the presentation? Your uploaded slides will be lost.');
+      if (!leave) return;
+    }
     stopGesture();
-    viewerScreen.classList.add('hidden');
-    uploadScreen.classList.remove('hidden');
-    dropZone.classList.remove('hidden');
-    uploadProgress.classList.add('hidden');
-    progressFill.style.width = '0%';
-    fileInput.value = '';
+    showScreen('upload-screen');
+    if (dropZone) dropZone.classList.remove('hidden');
+    if (uploadProgress) uploadProgress.classList.add('hidden');
+    setRingProgress(0);
+    if (fileInput) fileInput.value = '';
     slides = [];
     currentIndex = 0;
   });
 
-  btnFullscreen.addEventListener('click', () => {
+  if (btnFullscreen) btnFullscreen.addEventListener('click', function () {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen();
     else document.exitFullscreen();
   });
 
-  // Keyboard controls
-  document.addEventListener('keydown', (e) => {
-    if (viewerScreen.classList.contains('hidden')) return;
+  // ===== SLIDE OVERVIEW =====
+  function openOverview() {
+    if (!overviewPanel || !overviewGrid) return;
+    overviewGrid.innerHTML = '';
+
+    slides.forEach(function (slide, idx) {
+      var thumb = document.createElement('div');
+      thumb.className = 'overview-thumb' + (idx === currentIndex ? ' active' : '');
+
+      if (slide.type === 'image' && slide.image) {
+        var img = document.createElement('img');
+        img.src = slide.image;
+        img.alt = 'Slide ' + (idx + 1);
+        thumb.appendChild(img);
+      } else {
+        var placeholder = document.createElement('div');
+        placeholder.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#1a1a1a;color:#555;font-size:14px;';
+        placeholder.textContent = 'Slide ' + (idx + 1);
+        thumb.appendChild(placeholder);
+      }
+
+      var label = document.createElement('div');
+      label.className = 'overview-thumb-label';
+      label.textContent = 'Slide ' + (idx + 1);
+      thumb.appendChild(label);
+
+      thumb.addEventListener('click', function () { goToSlide(idx); });
+      overviewGrid.appendChild(thumb);
+    });
+
+    overviewPanel.classList.remove('hidden');
+  }
+
+  function closeOverview() {
+    if (overviewPanel) overviewPanel.classList.add('hidden');
+  }
+
+  if (btnOverview) btnOverview.addEventListener('click', openOverview);
+  if (overviewClose) overviewClose.addEventListener('click', closeOverview);
+
+  // ===== HELP OVERLAY =====
+  function openHelp() {
+    if (helpOverlay) helpOverlay.classList.remove('hidden');
+  }
+  function closeHelp() {
+    if (helpOverlay) helpOverlay.classList.add('hidden');
+  }
+
+  if (btnHelp) btnHelp.addEventListener('click', openHelp);
+  if (helpClose) helpClose.addEventListener('click', closeHelp);
+
+  // Close overlays on Escape or background click
+  function closeOverlays() {
+    closeOverview();
+    closeHelp();
+    if (pointerPanel) pointerPanel.classList.add('hidden');
+  }
+
+  if (helpOverlay) helpOverlay.addEventListener('click', function (e) { if (e.target === helpOverlay) closeHelp(); });
+  if (overviewPanel) overviewPanel.addEventListener('click', function (e) { if (e.target === overviewPanel) closeOverview(); });
+
+  // ===== KEYBOARD =====
+  document.addEventListener('keydown', function (e) {
+    // Always handle Escape
+    if (e.key === 'Escape') {
+      closeOverlays();
+      return;
+    }
+
+    // Only handle viewer shortcuts when viewer is active
+    if (!viewerScreen || !viewerScreen.classList.contains('screen-active')) return;
+
+    // Ignore if an overlay is open
+    if ((overviewPanel && !overviewPanel.classList.contains('hidden')) ||
+        (helpOverlay && !helpOverlay.classList.contains('hidden'))) {
+      if (e.key === 'Escape') closeOverlays();
+      return;
+    }
+
     if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); goNext(); }
-    if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev(); }
+    else if (e.key === 'Home') { e.preventDefault(); goToSlide(0); }
+    else if (e.key === 'End') { e.preventDefault(); goToSlide(slides.length - 1); }
+    else if (e.key === 'g' || e.key === 'G') { if (gestureActive) stopGesture(); else startGesture(); }
+    else if (e.key === 'l' || e.key === 'L') { if (btnLaser) btnLaser.click(); }
+    else if (e.key === 'f' || e.key === 'F') { if (btnFullscreen) btnFullscreen.click(); }
+    else if (e.key === 'o' || e.key === 'O') { openOverview(); }
+    else if (e.key === '?' || e.key === '/') { openHelp(); }
   });
 
   // Click on slide area for next/prev
-  slideArea.addEventListener('click', (e) => {
-    if (viewerScreen.classList.contains('hidden')) return;
-    const rect = slideArea.getBoundingClientRect();
-    const x = e.clientX - rect.left;
+  if (slideArea) slideArea.addEventListener('click', function (e) {
+    if (!viewerScreen || !viewerScreen.classList.contains('screen-active')) return;
+    // Don't trigger on buttons
+    if (e.target.closest('.slide-nav-arrow') || e.target.closest('.tool-btn')) return;
+    var rect = slideArea.getBoundingClientRect();
+    var x = e.clientX - rect.left;
     if (x > rect.width / 2) goNext(); else goPrev();
   });
 
   // ===== GESTURE CONTROL =====
-  btnGesture.addEventListener('click', () => {
-    if (gestureActive) stopGesture();
-    else startGesture();
+  if (btnGesture) btnGesture.addEventListener('click', function () {
+    if (gestureActive) stopGesture(); else startGesture();
   });
+
+  if (camClose) camClose.addEventListener('click', function () { stopGesture(); });
 
   async function startGesture() {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
-      camVideo.srcObject = stream;
-      await camVideo.play();
+      var stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+      if (camVideo) { camVideo.srcObject = stream; await camVideo.play(); }
 
-      camCanvas.width = 640;
-      camCanvas.height = 480;
+      if (camCanvas) { camCanvas.width = 640; camCanvas.height = 480; }
 
-      hands = new Hands({
-        locateFile: (file) => `vendor/mediapipe/${file}`
-      });
-
+      hands = new Hands({ locateFile: function (file) { return 'vendor/mediapipe/' + file; } });
       hands.setOptions({
         maxNumHands: 1,
         modelComplexity: 1,
         minDetectionConfidence: 0.7,
         minTrackingConfidence: 0.5
       });
-
       hands.onResults(onHandResults);
 
       mediaPipeCamera = new Camera(camVideo, {
-        onFrame: async () => {
+        onFrame: async function () {
           if (hands && gestureActive) await hands.send({ image: camVideo });
         },
         width: 640,
@@ -582,12 +824,12 @@
       mediaPipeCamera.start();
 
       gestureActive = true;
-      cameraBox.classList.remove('hidden');
-      btnGesture.classList.add('active');
-      setBtnText(btnGesture, 'gesture', 'Gesture: ON');
+      if (cameraBox) cameraBox.classList.remove('hidden');
+      if (btnGesture) btnGesture.classList.add('active');
+      showNotification('Gesture control enabled', 'success');
     } catch (err) {
       console.error('Camera error:', err);
-      alert('Could not access camera. Make sure you allow camera permission.');
+      showNotification('Could not access camera. Please allow camera permission.', 'error');
     }
   }
 
@@ -595,99 +837,89 @@
     gestureActive = false;
     laserActive = false;
     if (mediaPipeCamera) { mediaPipeCamera.stop(); mediaPipeCamera = null; }
-    if (camVideo.srcObject) {
-      camVideo.srcObject.getTracks().forEach(t => t.stop());
+    if (camVideo && camVideo.srcObject) {
+      camVideo.srcObject.getTracks().forEach(function (t) { t.stop(); });
       camVideo.srcObject = null;
     }
     hands = null;
     positionHistory = [];
-    cameraBox.classList.add('hidden');
-    btnGesture.classList.remove('active');
-    setBtnText(btnGesture, 'gesture', 'Gesture: OFF');
-    btnLaser.classList.remove('active');
-    setBtnText(btnLaser, 'laser', 'Laser: OFF');
-    laserDot.classList.add('hidden');
+    if (cameraBox) cameraBox.classList.add('hidden');
+    if (btnGesture) btnGesture.classList.remove('active');
+    if (btnLaser) btnLaser.classList.remove('active');
+    if (laserDot) laserDot.classList.add('hidden');
   }
 
   // Laser pointer toggle
-  btnLaser.addEventListener('click', () => {
+  if (btnLaser) btnLaser.addEventListener('click', function () {
     if (!gestureActive) {
-      // Start gesture first if not running
-      startGesture().then(() => {
+      startGesture().then(function () {
         laserActive = true;
-        btnLaser.classList.add('active');
-        setBtnText(btnLaser, 'laser', 'Laser: ON');
-        showToast(SVG_ICONS.laser, 'Laser Pointer ON');
+        if (btnLaser) btnLaser.classList.add('active');
+        showGestureToast('🎯', 'Laser Pointer ON');
       });
     } else {
       laserActive = !laserActive;
-      btnLaser.classList.toggle('active', laserActive);
-      setBtnText(btnLaser, 'laser', laserActive ? 'Laser: ON' : 'Laser: OFF');
-      if (!laserActive) laserDot.classList.add('hidden');
-      showToast(SVG_ICONS.laser, laserActive ? 'Laser Pointer ON' : 'Laser Pointer OFF');
+      if (btnLaser) btnLaser.classList.toggle('active', laserActive);
+      if (!laserActive && laserDot) laserDot.classList.add('hidden');
+      showGestureToast('🎯', laserActive ? 'Laser Pointer ON' : 'Laser Pointer OFF');
     }
   });
 
-  // Detect pointing gesture: index finger extended, other fingers curled
   function isPointingGesture(lm) {
-    // Finger tip (8) must be above PIP (6) — index finger extended
-    const indexExtended = lm[8].y < lm[6].y;
-    // Middle finger curled: tip (12) below PIP (10)
-    const middleCurled = lm[12].y > lm[10].y;
-    // Ring finger curled: tip (16) below PIP (14)
-    const ringCurled = lm[16].y > lm[14].y;
-    // Pinky curled: tip (20) below PIP (18)
-    const pinkyCurled = lm[20].y > lm[18].y;
+    var indexExtended = lm[8].y < lm[6].y;
+    var middleCurled = lm[12].y > lm[10].y;
+    var ringCurled = lm[16].y > lm[14].y;
+    var pinkyCurled = lm[20].y > lm[18].y;
     return indexExtended && middleCurled && ringCurled && pinkyCurled;
   }
 
   function updateLaserPointer(lm) {
     if (!laserActive) {
-      laserDot.classList.add('hidden');
+      if (laserDot) laserDot.classList.add('hidden');
       return;
     }
 
     if (isPointingGesture(lm)) {
-      // Index fingertip = landmark 8
-      // Camera is mirrored, so invert X
-      const rawX = 1 - lm[8].x;
-      const rawY = lm[8].y;
+      var rawX = 1 - lm[8].x;
+      var rawY = lm[8].y;
 
-      // Smooth the position to reduce jitter
       laserSmooth.x += (rawX - laserSmooth.x) * LASER_SMOOTHING;
       laserSmooth.y += (rawY - laserSmooth.y) * LASER_SMOOTHING;
 
-      // Map to slide container bounds
-      const slideRect = slideContainer.getBoundingClientRect();
-      const dotX = slideRect.left + laserSmooth.x * slideRect.width;
-      const dotY = slideRect.top + laserSmooth.y * slideRect.height;
+      if (slideContainer) {
+        var slideRect = slideContainer.getBoundingClientRect();
+        var dotX = slideRect.left + laserSmooth.x * slideRect.width;
+        var dotY = slideRect.top + laserSmooth.y * slideRect.height;
 
-      laserDot.style.left = dotX + 'px';
-      laserDot.style.top = dotY + 'px';
-      laserDot.classList.remove('hidden');
+        if (laserDot) {
+          laserDot.style.left = dotX + 'px';
+          laserDot.style.top = dotY + 'px';
+          laserDot.classList.remove('hidden');
+        }
+      }
     } else {
-      laserDot.classList.add('hidden');
+      if (laserDot) laserDot.classList.add('hidden');
     }
   }
 
   function onHandResults(results) {
-    camCtx.clearRect(0, 0, camCanvas.width, camCanvas.height);
+    if (camCtx) camCtx.clearRect(0, 0, camCanvas.width, camCanvas.height);
 
     if (!results.multiHandLandmarks || !results.multiHandLandmarks.length) {
       positionHistory = [];
-      laserDot.classList.add('hidden');
+      if (laserDot) laserDot.classList.add('hidden');
       return;
     }
 
-    const lm = results.multiHandLandmarks[0];
+    var lm = results.multiHandLandmarks[0];
     drawHand(lm);
     updateLaserPointer(lm);
     detectSwipe(lm);
   }
 
   function drawHand(lm) {
-    // Draw skeleton
-    const connections = [
+    if (!camCtx) return;
+    var connections = [
       [0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],
       [0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],
       [0,17],[17,18],[18,19],[19,20],[5,9],[9,13],[13,17]
@@ -695,24 +927,24 @@
 
     camCtx.strokeStyle = '#4a9eff';
     camCtx.lineWidth = 2;
-    for (const [a, b] of connections) {
+    connections.forEach(function (pair) {
       camCtx.beginPath();
-      camCtx.moveTo(lm[a].x * camCanvas.width, lm[a].y * camCanvas.height);
-      camCtx.lineTo(lm[b].x * camCanvas.width, lm[b].y * camCanvas.height);
+      camCtx.moveTo(lm[pair[0]].x * camCanvas.width, lm[pair[0]].y * camCanvas.height);
+      camCtx.lineTo(lm[pair[1]].x * camCanvas.width, lm[pair[1]].y * camCanvas.height);
       camCtx.stroke();
-    }
+    });
 
-    for (const p of lm) {
+    lm.forEach(function (p) {
       camCtx.beginPath();
       camCtx.arc(p.x * camCanvas.width, p.y * camCanvas.height, 4, 0, Math.PI * 2);
       camCtx.fillStyle = '#fff';
       camCtx.fill();
-    }
+    });
   }
 
   function detectSwipe(lm) {
-    const wristX = lm[0].x;
-    const now = Date.now();
+    var wristX = lm[0].x;
+    var now = Date.now();
 
     positionHistory.push({ x: wristX, t: now });
     if (positionHistory.length > 10) positionHistory.shift();
@@ -720,35 +952,36 @@
     if (positionHistory.length < 5) return;
     if (now - lastGestureTime < GESTURE_COOLDOWN) return;
 
-    const oldest = positionHistory[0];
-    const newest = positionHistory[positionHistory.length - 1];
-    const dx = newest.x - oldest.x;
-    const dt = newest.t - oldest.t;
+    var oldest = positionHistory[0];
+    var newest = positionHistory[positionHistory.length - 1];
+    var dx = newest.x - oldest.x;
+    var dt = newest.t - oldest.t;
 
     if (dt < 600 && Math.abs(dx) > SWIPE_THRESHOLD) {
       positionHistory = [];
       lastGestureTime = now;
 
-      // Camera is mirrored: positive dx in camera = left in real life = move to previous
       if (dx > 0) {
         goPrev();
-        showToast(SVG_ICONS.prev, 'Previous');
+        showGestureToast('👈', 'Previous');
       } else {
         goNext();
-        showToast(SVG_ICONS.next, 'Next');
+        showGestureToast('👉', 'Next');
       }
     }
   }
 
-  function showToast(iconHtml, text) {
-    toastIcon.innerHTML = iconHtml;
-    toastText.textContent = text;
-    gestureToast.classList.remove('hidden');
-    // Reset animation
-    gestureToast.style.animation = 'none';
-    void gestureToast.offsetHeight;
-    gestureToast.style.animation = '';
-    setTimeout(() => gestureToast.classList.add('hidden'), 800);
+  // Gesture toast (center screen, auto-dismiss)
+  function showGestureToast(icon, text) {
+    if (toastIcon) toastIcon.textContent = icon;
+    if (toastText) toastText.textContent = text;
+    if (gestureToast) {
+      gestureToast.classList.remove('hidden');
+      gestureToast.style.animation = 'none';
+      void gestureToast.offsetHeight;
+      gestureToast.style.animation = '';
+      setTimeout(function () { gestureToast.classList.add('hidden'); }, 800);
+    }
   }
 
 })();
